@@ -123,13 +123,19 @@ label {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
 }
 
 .schedule-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
+  gap: 1rem;
+}
+
+.dashboard-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -248,6 +254,41 @@ label {
   font-size: 0.85rem;
 }
 
+.ai-placeholder-card {
+  background: linear-gradient(135deg, #ffffff 0%, #eef6ff 100%);
+}
+
+.ai-placeholder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.ai-placeholder-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ai-note {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.ai-note strong,
+.ai-note p {
+  display: block;
+}
+
+.ai-note p {
+  margin: 0.45rem 0 0;
+  color: var(--text-soft);
+}
+
 @media (max-width: 900px) {
   .site-header,
   .page-heading,
@@ -257,8 +298,10 @@ label {
   }
 
   .dashboard-grid,
+  .dashboard-detail-grid,
   .schedule-grid,
-  .form-grid {
+  .form-grid,
+  .ai-placeholder-notes {
     grid-template-columns: 1fr;
   }
 

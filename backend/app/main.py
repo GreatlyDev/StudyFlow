@@ -6,8 +6,10 @@ from app.db.base import Base
 from app.db.session import engine
 from app.models import assignment, course, schedule, user  # noqa: F401
 from app.routes.assignments import router as assignments_router
+from app.routes.ai import router as ai_router
 from app.routes.auth import router as auth_router
 from app.routes.courses import router as courses_router
+from app.routes.dashboard import router as dashboard_router
 from app.routes.health import router as health_router
 from app.routes.schedules import router as schedules_router
 
@@ -34,6 +36,8 @@ def on_startup() -> None:
 
 app.include_router(health_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")
 app.include_router(assignments_router, prefix="/api")
 app.include_router(courses_router, prefix="/api")
+app.include_router(dashboard_router, prefix="/api")
 app.include_router(schedules_router, prefix="/api")

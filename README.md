@@ -5,8 +5,10 @@ StudyFlow is a team-built software engineering project focused on helping studen
 This first scaffold covers:
 
 - user authentication
+- course and assignment management
 - schedule management foundation
-- a basic dashboard shell
+- a dashboard summary with deadline tracking
+- AI placeholder endpoints for future integration
 - frontend and backend project structure for team collaboration
 
 ## Team-Friendly Structure
@@ -76,6 +78,7 @@ npm.cmd run dev
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
+- `GET /api/ai/placeholder`
 - `POST /api/assignments`
 - `GET /api/assignments`
 - `PUT /api/assignments/{id}`
@@ -84,6 +87,7 @@ npm.cmd run dev
 - `GET /api/courses`
 - `PUT /api/courses/{id}`
 - `DELETE /api/courses/{id}`
+- `GET /api/dashboard/summary`
 - `POST /api/schedules`
 - `GET /api/schedules`
 - `PUT /api/schedules/{id}`
