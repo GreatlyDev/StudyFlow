@@ -1,16 +1,139 @@
 import { useEffect, useState } from "react";
 
 import { aiApi, dashboardApi } from "../api/client";
+import CalendarWidget from "../components/CalendarWidget";
+import StudyPlanTimeline from "../components/StudyPlanTimeline";
 import { useAuth } from "../context/AuthContext";
 
-function getPriorityLabel(priority) {
-  if (priority === 1) {
-    return "High priority";
+function buildDate(dateString, timeString) {
+  const fallbackTime = timeString || "12:00";
+  return new Date(`${dateString}T${fallbackTime}`);
+}
+
+function formatTimeLabel(timeString) {
+  if (!timeString) {
+    return "Any time";
   }
-  if (priority === 2) {
-    return "Medium priority";
+
+  const [hourText, minuteText] = timeString.split(":");
+  const hour = Number(hourText);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const normalizedHour = hour % 12 || 12;
+
+  if (minuteText && minuteText !== "00") {
+    return `${normalizedHour}:${minuteText} ${suffix}`;
   }
-  return "Low priority";
+
+  return `${normalizedHour} ${suffix}`;
+}
+
+function formatDueSummary(assignment) {
+  const priorityLabel =
+    assignment.priority === 1
+      ? "High priority"
+      : assignment.priority === 2
+        ? "Medium priority"
+        : "Low priority";
+
+  return `${assignment.status} - ${priorityLabel}`;
+}
+
+function sortSchedules(items) {
+  return [...items].sort((first, second) => {
+    return (
+      buildDate(first.schedule_date, first.start_time).getTime() -
+      buildDate(second.schedule_date, second.start_time).getTime()
+    );
+  });
+}
+
+function sortAssignments(items) {
+  return [...items].sort((first, second) => {
+    return (
+      buildDate(first.due_date, first.due_time || "12:00").getTime() -
+      buildDate(second.due_date, second.due_time || "12:00").getTime()
+    );
+  });
+}
+
+function buildTimelineItems(summary) {
+  const schedules = sortSchedules(summary?.upcoming_schedule_items || []);
+  const assignments = sortAssignments(summary?.upcoming_deadlines || []);
+
+  const firstSchedule = schedules[0];
+  const secondSchedule = schedules[1];
+  const focusAssignment =
+    assignments.find((assignment) => assignment.status !== "completed") || assignments[0];
+  const laterItem = secondSchedule || assignments[1];
+
+  const items = [
+    firstSchedule
+      ? {
+          id: `schedule-${firstSchedule.id}`,
+          timeLabel: formatTimeLabel(firstSchedule.start_time),
+          subtitle: `${firstSchedule.location || "Study session"} - Scheduled`,
+          title: firstSchedule.title,
+          variant: "standard",
+        }
+      : {
+          id: "default-review",
+          timeLabel: "10 AM",
+          subtitle: "CS 101 - Lecture Review",
+          title: "Data Structures & Algorithms",
+          variant: "standard",
+        },
+    {
+      id: "lunch-break",
+      timeLabel: "11 AM",
+      title: "Lunch break",
+      variant: "blocked",
+    },
+    focusAssignment
+      ? {
+          id: `assignment-${focusAssignment.id}`,
+          timeLabel: formatTimeLabel(focusAssignment.due_time || "13:00"),
+          subtitle: `${focusAssignment.course_name || "Upcoming task"} - Exam Prep`,
+          title: focusAssignment.title,
+          footer: formatDueSummary(focusAssignment),
+          badge: "AI Recommended",
+          variant: "primary",
+        }
+      : {
+          id: "default-focus",
+          timeLabel: "1 PM",
+          subtitle: "Biology 204 - Exam Prep",
+          title: "Cellular Respiration Quiz",
+          footer: "Focus session: 2 hrs",
+          badge: "AI Recommended",
+          variant: "primary",
+        },
+    laterItem
+      ? {
+          id: laterItem.schedule_date
+            ? `later-schedule-${laterItem.id}`
+            : `later-assignment-${laterItem.id}`,
+          timeLabel: laterItem.schedule_date
+            ? formatTimeLabel(laterItem.start_time)
+            : formatTimeLabel(laterItem.due_time || "15:00"),
+          subtitle: laterItem.schedule_date
+            ? `${laterItem.location || "Study session"} - Planned`
+            : `${laterItem.course_name || "Course task"} - Due Soon`,
+          title: laterItem.title,
+          variant: "standard",
+        }
+      : {
+          id: "default-reading",
+          timeLabel: "3 PM",
+          subtitle: "Literature 102 - Reading",
+          title: "Read Chapters 4-6",
+          variant: "standard",
+        },
+  ];
+
+  return items.map((item, index) => ({
+    ...item,
+    isLast: index === items.length - 1,
+  }));
 }
 
 export default function DashboardPage() {
@@ -36,130 +159,106 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [token]);
 
-  const upcomingAssignments = summary?.upcoming_deadlines || [];
-  const upcomingSchedules = summary?.upcoming_schedule_items || [];
+  const upcomingAssignments = sortAssignments(summary?.upcoming_deadlines || []);
+  const upcomingSchedules = sortSchedules(summary?.upcoming_schedule_items || []);
+  const timelineItems = buildTimelineItems(summary);
+
+  const eventDates = [
+    ...upcomingAssignments.map((assignment) => assignment.due_date),
+    ...upcomingSchedules.map((schedule) => schedule.schedule_date),
+  ];
+
+  const focusDateString =
+    upcomingAssignments[0]?.due_date || upcomingSchedules[0]?.schedule_date || null;
+  const focusDate = focusDateString ? new Date(`${focusDateString}T12:00`) : new Date();
 
   return (
-    <section className="page">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Dashboard</p>
-          <h2>Hello, {user?.full_name}</h2>
-        </div>
-        <p className="helper-text">
-          This prototype now tracks your courses, assignments, study schedule, and future AI study guidance.
-        </p>
-      </div>
-
-      {error ? <p className="error-text">{error}</p> : null}
-
-      <div className="dashboard-grid">
-        <article className="card stat-card">
-          <h3>Courses</h3>
-          <p className="stat-number">{summary?.course_count ?? 0}</p>
-          <p className="helper-text">Courses added so far for your semester plan.</p>
-        </article>
-
-        <article className="card stat-card">
-          <h3>Schedule Items</h3>
-          <p className="stat-number">{summary?.schedule_count ?? 0}</p>
-          <p className="helper-text">Study sessions currently saved to your account.</p>
-        </article>
-
-        <article className="card stat-card">
-          <h3>Assignments</h3>
-          <p className="stat-number">{summary?.assignment_count ?? 0}</p>
-          <p className="helper-text">Assignments tracked for your current courses.</p>
-        </article>
-
-        <article className="card stat-card">
-          <h3>Pending Work</h3>
-          <p className="stat-number">{summary?.pending_assignment_count ?? 0}</p>
-          <p className="helper-text">Assignments that still need attention.</p>
-        </article>
-      </div>
-
-      <div className="dashboard-detail-grid">
-        <div className="card">
-          <h3>Upcoming Deadlines</h3>
-          {upcomingAssignments.length === 0 ? (
-            <p className="helper-text">
-              No assignments yet. Add one from the Assignments page to give the dashboard real deadlines.
-            </p>
-          ) : (
-            <div className="list-stack">
-              {upcomingAssignments.map((assignment) => (
-                <div key={assignment.id} className="list-item">
-                  <div>
-                    <strong>{assignment.title}</strong>
-                    <p>{assignment.course_name}</p>
-                    <p>
-                      {assignment.due_date}
-                      {assignment.due_time ? ` | ${assignment.due_time.slice(0, 5)}` : ""}
-                    </p>
-                  </div>
-                  <span className="tag">
-                    {assignment.status} | {getPriorityLabel(assignment.priority)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+    <div className="content-grid">
+      <section className="schedule-section">
+        <div className="section-header">
+          <span>Study Plan</span>
+          <button type="button" className="btn-icon" aria-label="More study plan options">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
         </div>
 
-        <div className="card">
-          <h3>Upcoming Study Sessions</h3>
-          {upcomingSchedules.length === 0 ? (
-            <p className="helper-text">
-              No schedule items yet. Add one from the Schedule page to build your study plan.
-            </p>
-          ) : (
-            <div className="list-stack">
-              {upcomingSchedules.map((schedule) => (
-                <div key={schedule.id} className="list-item">
-                  <div>
-                    <strong>{schedule.title}</strong>
-                    <p>
-                      {schedule.schedule_date} | {schedule.start_time.slice(0, 5)} -{" "}
-                      {schedule.end_time.slice(0, 5)}
-                    </p>
-                  </div>
-                  <span className="tag">{schedule.location || "No location set"}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        {error ? <p className="error-text">{error}</p> : null}
 
-      <div className="card ai-placeholder-card">
-        <div className="ai-placeholder-header">
-          <div>
+        <StudyPlanTimeline items={timelineItems} />
+      </section>
+
+      <section className="overview-section">
+        <div className="overview-stack">
+          <CalendarWidget
+            displayDate={focusDate}
+            selectedDate={focusDate}
+            eventDates={eventDates}
+          />
+
+          <div className="insight-card" id="ai-foundation">
             <p className="eyebrow">AI Foundation</p>
             <h3>{aiPlaceholder?.title || "AI Study Recommendations"}</h3>
+            <p className="helper-text">
+              {aiPlaceholder?.message ||
+                "AI recommendations are not fully implemented yet, but the project structure is ready."}
+            </p>
+
+            <div className="insight-chip-row">
+              <span className="insight-chip">Courses: {summary?.course_count ?? 0}</span>
+              <span className="insight-chip">Assignments: {summary?.assignment_count ?? 0}</span>
+              <span className="insight-chip">Pending: {summary?.pending_assignment_count ?? 0}</span>
+            </div>
+
+            <div className="mini-summary-grid">
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Student</span>
+                <strong>{user?.full_name}</strong>
+              </div>
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Next step</span>
+                <strong>{aiPlaceholder?.next_step || "Connect future AI study guidance"}</strong>
+              </div>
+            </div>
           </div>
-          <span className="tag">
-            {aiPlaceholder?.status === "placeholder" ? "Coming next" : aiPlaceholder?.status}
-          </span>
+
+          <div className="stats-panel">
+            <div className="section-header section-header-tight">
+              <span>Quick Snapshot</span>
+            </div>
+            <div className="mini-summary-grid">
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Study Blocks</span>
+                <strong>{summary?.schedule_count ?? 0}</strong>
+              </div>
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Upcoming Deadlines</span>
+                <strong>{upcomingAssignments.length}</strong>
+              </div>
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Courses</span>
+                <strong>{summary?.course_count ?? 0}</strong>
+              </div>
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Active Focus</span>
+                <strong>{timelineItems[2]?.title || "No task selected"}</strong>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <p className="helper-text">
-          {aiPlaceholder?.message ||
-            "AI recommendations are not fully implemented yet, but the project structure is ready."}
-        </p>
-
-        <div className="ai-placeholder-notes">
-          <div className="ai-note">
-            <strong>Planned inputs</strong>
-            <p>Courses, assignments, due dates, and study schedule data.</p>
-          </div>
-
-          <div className="ai-note">
-            <strong>Next step</strong>
-            <p>{aiPlaceholder?.next_step || "Connect the dashboard data to a future AI service."}</p>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

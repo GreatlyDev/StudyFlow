@@ -2,9 +2,11 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AiAssistantPage from "./pages/AiAssistantPage";
 import AssignmentsPage from "./pages/AssignmentsPage";
 import CoursesPage from "./pages/CoursesPage";
 import DashboardPage from "./pages/DashboardPage";
+import FlashcardsPage from "./pages/FlashcardsPage";
 import LoginPage from "./pages/LoginPage";
 import SchedulePage from "./pages/SchedulePage";
 import SignupPage from "./pages/SignupPage";
@@ -19,8 +21,10 @@ export default function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/assistant" element={<AiAssistantPage />} />
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/flashcards" element={<FlashcardsPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
         </Route>
       </Route>

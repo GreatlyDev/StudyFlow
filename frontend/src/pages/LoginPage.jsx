@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
+import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
@@ -39,50 +40,45 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="auth-page">
-      <div className="card auth-card">
-        <p className="eyebrow">Welcome Back</p>
-        <h2>Login to StudyFlow</h2>
-        <p className="helper-text">
-          Use your account to access your dashboard and study schedule.
-        </p>
+    <AuthShell
+      eyebrow="Welcome Back"
+      title="Login to StudyFlow"
+      subtitle="Use your account to continue building your schedule, tracking deadlines, and reviewing your AI study plan foundation."
+      footerText="Need an account?"
+      footerLinkLabel="Create one here."
+      footerLinkTo="/signup"
+    >
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="field-label">
+          Email
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="student@example.com"
+            required
+          />
+        </label>
 
-        <form className="form-stack" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="student@example.com"
-              required
-            />
-          </label>
+        <label className="field-label">
+          Password
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Enter your password"
+            required
+          />
+        </label>
 
-          <label>
-            Password
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
-          </label>
+        {error ? <p className="error-text">{error}</p> : null}
 
-          {error ? <p className="error-text">{error}</p> : null}
-
-          <button type="submit" className="button" disabled={isSubmitting}>
-            {isSubmitting ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <p className="helper-text">
-          Need an account? <Link to="/signup">Create one here.</Link>
-        </p>
-      </div>
-    </section>
+        <button type="submit" className="primary-button" disabled={isSubmitting}>
+          {isSubmitting ? "Logging in..." : "Login"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
