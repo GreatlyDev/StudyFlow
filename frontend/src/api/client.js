@@ -153,3 +153,20 @@ export const assignmentApi = {
     });
   },
 };
+
+export const dashboardApi = {
+  getSummary(token) {
+    return apiRequest("/dashboard/summary", {
+      method: "GET",
+      token,
+    });
+  },
+};
+
+export const aiApi = {
+  getPlaceholder() {
+    return apiRequest("/ai/placeholder", {
+      method: "GET",
+    });
+  },
+};

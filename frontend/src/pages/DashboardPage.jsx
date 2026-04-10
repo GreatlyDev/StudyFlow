@@ -1,26 +1,33 @@
 import { useEffect, useState } from "react";
 
-import { assignmentApi, courseApi, scheduleApi } from "../api/client";
+import { aiApi, dashboardApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+
+function getPriorityLabel(priority) {
+  if (priority === 1) {
+    return "High priority";
+  }
+  if (priority === 2) {
+    return "Medium priority";
+  }
+  return "Low priority";
+}
 
 export default function DashboardPage() {
   const { token, user } = useAuth();
-  const [assignments, setAssignments] = useState([]);
-  const [courses, setCourses] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [aiPlaceholder, setAiPlaceholder] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [scheduleItems, courseItems, assignmentItems] = await Promise.all([
-          scheduleApi.list(token),
-          courseApi.list(token),
-          assignmentApi.list(token),
+        const [summaryData, aiData] = await Promise.all([
+          dashboardApi.getSummary(token),
+          aiApi.getPlaceholder(),
         ]);
-        setSchedules(scheduleItems);
-        setCourses(courseItems);
-        setAssignments(assignmentItems);
+        setSummary(summaryData);
+        setAiPlaceholder(aiData);
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -29,8 +36,8 @@ export default function DashboardPage() {
     loadDashboardData();
   }, [token]);
 
-  const upcomingSchedules = schedules.slice(0, 3);
-  const upcomingAssignments = assignments.filter((item) => item.status !== "completed").slice(0, 3);
+  const upcomingAssignments = summary?.upcoming_deadlines || [];
+  const upcomingSchedules = summary?.upcoming_schedule_items || [];
 
   return (
     <section className="page">
@@ -40,78 +47,118 @@ export default function DashboardPage() {
           <h2>Hello, {user?.full_name}</h2>
         </div>
         <p className="helper-text">
-          This first version focuses on auth, schedule tracking, and a simple student dashboard.
+          This prototype now tracks your courses, assignments, study schedule, and future AI study guidance.
         </p>
       </div>
+
+      {error ? <p className="error-text">{error}</p> : null}
 
       <div className="dashboard-grid">
         <article className="card stat-card">
           <h3>Courses</h3>
-          <p className="stat-number">{courses.length}</p>
+          <p className="stat-number">{summary?.course_count ?? 0}</p>
           <p className="helper-text">Courses added so far for your semester plan.</p>
         </article>
 
         <article className="card stat-card">
           <h3>Schedule Items</h3>
-          <p className="stat-number">{schedules.length}</p>
+          <p className="stat-number">{summary?.schedule_count ?? 0}</p>
           <p className="helper-text">Study sessions currently saved to your account.</p>
         </article>
 
         <article className="card stat-card">
           <h3>Assignments</h3>
-          <p className="stat-number">{assignments.length}</p>
+          <p className="stat-number">{summary?.assignment_count ?? 0}</p>
           <p className="helper-text">Assignments tracked for your current courses.</p>
+        </article>
+
+        <article className="card stat-card">
+          <h3>Pending Work</h3>
+          <p className="stat-number">{summary?.pending_assignment_count ?? 0}</p>
+          <p className="helper-text">Assignments that still need attention.</p>
         </article>
       </div>
 
-      <div className="card">
-        <h3>Upcoming Deadlines</h3>
-        {error ? <p className="error-text">{error}</p> : null}
-
-        {upcomingAssignments.length === 0 ? (
-          <p className="helper-text">
-            No assignments yet. Add one from the Assignments page to give the dashboard real deadlines.
-          </p>
-        ) : (
-          <div className="list-stack">
-            {upcomingAssignments.map((assignment) => (
-              <div key={assignment.id} className="list-item">
-                <div>
-                  <strong>{assignment.title}</strong>
-                  <p>
-                    {assignment.due_date}
-                    {assignment.due_time ? ` | ${assignment.due_time.slice(0, 5)}` : ""}
-                  </p>
+      <div className="dashboard-detail-grid">
+        <div className="card">
+          <h3>Upcoming Deadlines</h3>
+          {upcomingAssignments.length === 0 ? (
+            <p className="helper-text">
+              No assignments yet. Add one from the Assignments page to give the dashboard real deadlines.
+            </p>
+          ) : (
+            <div className="list-stack">
+              {upcomingAssignments.map((assignment) => (
+                <div key={assignment.id} className="list-item">
+                  <div>
+                    <strong>{assignment.title}</strong>
+                    <p>{assignment.course_name}</p>
+                    <p>
+                      {assignment.due_date}
+                      {assignment.due_time ? ` | ${assignment.due_time.slice(0, 5)}` : ""}
+                    </p>
+                  </div>
+                  <span className="tag">
+                    {assignment.status} | {getPriorityLabel(assignment.priority)}
+                  </span>
                 </div>
-                <span className="tag">{assignment.status}</span>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3>Upcoming Study Sessions</h3>
+          {upcomingSchedules.length === 0 ? (
+            <p className="helper-text">
+              No schedule items yet. Add one from the Schedule page to build your study plan.
+            </p>
+          ) : (
+            <div className="list-stack">
+              {upcomingSchedules.map((schedule) => (
+                <div key={schedule.id} className="list-item">
+                  <div>
+                    <strong>{schedule.title}</strong>
+                    <p>
+                      {schedule.schedule_date} | {schedule.start_time.slice(0, 5)} -{" "}
+                      {schedule.end_time.slice(0, 5)}
+                    </p>
+                  </div>
+                  <span className="tag">{schedule.location || "No location set"}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="card">
-        <h3>Upcoming Study Sessions</h3>
-        {upcomingSchedules.length === 0 ? (
-          <p className="helper-text">
-            No schedule items yet. Add one from the Schedule page to build your study plan.
-          </p>
-        ) : (
-          <div className="list-stack">
-            {upcomingSchedules.map((schedule) => (
-              <div key={schedule.id} className="list-item">
-                <div>
-                  <strong>{schedule.title}</strong>
-                  <p>
-                    {schedule.schedule_date} | {schedule.start_time.slice(0, 5)} -{" "}
-                    {schedule.end_time.slice(0, 5)}
-                  </p>
-                </div>
-                <span className="tag">{schedule.location || "No location set"}</span>
-              </div>
-            ))}
+      <div className="card ai-placeholder-card">
+        <div className="ai-placeholder-header">
+          <div>
+            <p className="eyebrow">AI Foundation</p>
+            <h3>{aiPlaceholder?.title || "AI Study Recommendations"}</h3>
           </div>
-        )}
+          <span className="tag">
+            {aiPlaceholder?.status === "placeholder" ? "Coming next" : aiPlaceholder?.status}
+          </span>
+        </div>
+
+        <p className="helper-text">
+          {aiPlaceholder?.message ||
+            "AI recommendations are not fully implemented yet, but the project structure is ready."}
+        </p>
+
+        <div className="ai-placeholder-notes">
+          <div className="ai-note">
+            <strong>Planned inputs</strong>
+            <p>Courses, assignments, due dates, and study schedule data.</p>
+          </div>
+
+          <div className="ai-note">
+            <strong>Next step</strong>
+            <p>{aiPlaceholder?.next_step || "Connect the dashboard data to a future AI service."}</p>
+          </div>
+        </div>
       </div>
     </section>
   );
