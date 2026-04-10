@@ -17,6 +17,7 @@ export default function Layout() {
           {user ? (
             <>
               <NavLink to="/dashboard">Dashboard</NavLink>
+              <NavLink to="/courses">Courses</NavLink>
               <NavLink to="/schedule">Schedule</NavLink>
               <button type="button" className="button button-secondary" onClick={logout}>
                 Logout

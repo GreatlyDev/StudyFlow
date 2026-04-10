@@ -89,3 +89,35 @@ export const scheduleApi = {
     });
   },
 };
+
+export const courseApi = {
+  list(token) {
+    return apiRequest("/courses", {
+      method: "GET",
+      token,
+    });
+  },
+
+  create(token, payload) {
+    return apiRequest("/courses", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
+  update(token, courseId, payload) {
+    return apiRequest(`/courses/${courseId}`, {
+      method: "PUT",
+      token,
+      body: payload,
+    });
+  },
+
+  remove(token, courseId) {
+    return apiRequest(`/courses/${courseId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+};
