@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { courseApi, scheduleApi } from "../api/client";
+import { assignmentApi, courseApi, scheduleApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 export default function DashboardPage() {
   const { token, user } = useAuth();
+  const [assignments, setAssignments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [error, setError] = useState("");
@@ -12,12 +13,14 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [scheduleItems, courseItems] = await Promise.all([
+        const [scheduleItems, courseItems, assignmentItems] = await Promise.all([
           scheduleApi.list(token),
           courseApi.list(token),
+          assignmentApi.list(token),
         ]);
         setSchedules(scheduleItems);
         setCourses(courseItems);
+        setAssignments(assignmentItems);
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -27,6 +30,7 @@ export default function DashboardPage() {
   }, [token]);
 
   const upcomingSchedules = schedules.slice(0, 3);
+  const upcomingAssignments = assignments.filter((item) => item.status !== "completed").slice(0, 3);
 
   return (
     <section className="page">
@@ -54,19 +58,43 @@ export default function DashboardPage() {
         </article>
 
         <article className="card stat-card">
-          <h3>Next Deadline View</h3>
-          <p className="stat-number">{upcomingSchedules.length}</p>
-          <p className="helper-text">Upcoming study blocks shown from your saved schedule list.</p>
+          <h3>Assignments</h3>
+          <p className="stat-number">{assignments.length}</p>
+          <p className="helper-text">Assignments tracked for your current courses.</p>
         </article>
       </div>
 
       <div className="card">
-        <h3>Upcoming Schedule</h3>
+        <h3>Upcoming Deadlines</h3>
         {error ? <p className="error-text">{error}</p> : null}
 
+        {upcomingAssignments.length === 0 ? (
+          <p className="helper-text">
+            No assignments yet. Add one from the Assignments page to give the dashboard real deadlines.
+          </p>
+        ) : (
+          <div className="list-stack">
+            {upcomingAssignments.map((assignment) => (
+              <div key={assignment.id} className="list-item">
+                <div>
+                  <strong>{assignment.title}</strong>
+                  <p>
+                    {assignment.due_date}
+                    {assignment.due_time ? ` | ${assignment.due_time.slice(0, 5)}` : ""}
+                  </p>
+                </div>
+                <span className="tag">{assignment.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h3>Upcoming Study Sessions</h3>
         {upcomingSchedules.length === 0 ? (
           <p className="helper-text">
-            No schedule items yet. Add one from the Schedule page to start building the dashboard.
+            No schedule items yet. Add one from the Schedule page to build your study plan.
           </p>
         ) : (
           <div className="list-stack">

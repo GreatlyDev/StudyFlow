@@ -121,3 +121,35 @@ export const courseApi = {
     });
   },
 };
+
+export const assignmentApi = {
+  list(token) {
+    return apiRequest("/assignments", {
+      method: "GET",
+      token,
+    });
+  },
+
+  create(token, payload) {
+    return apiRequest("/assignments", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
+  update(token, assignmentId, payload) {
+    return apiRequest(`/assignments/${assignmentId}`, {
+      method: "PUT",
+      token,
+      body: payload,
+    });
+  },
+
+  remove(token, assignmentId) {
+    return apiRequest(`/assignments/${assignmentId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+};
