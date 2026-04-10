@@ -1,0 +1,266 @@
+:root {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #14213d;
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef3f9 100%);
+  line-height: 1.5;
+  font-weight: 400;
+  --navy: #14213d;
+  --blue: #2563eb;
+  --blue-soft: #dbeafe;
+  --border: #d6e0ee;
+  --text-soft: #5b6b82;
+  --surface: #ffffff;
+  --danger: #b42318;
+  --success: #157f3b;
+  --shadow: 0 18px 45px rgba(20, 33, 61, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+a.active {
+  font-weight: 600;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-top: 0.45rem;
+  background: #fff;
+}
+
+textarea {
+  resize: vertical;
+}
+
+label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-container {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page,
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.auth-page {
+  min-height: calc(100vh - 140px);
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-card {
+  width: min(100%, 520px);
+}
+
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid rgba(214, 224, 238, 0.95);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1rem;
+}
+
+.form-stack,
+.list-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.button-row,
+.item-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.button {
+  border: none;
+  border-radius: 12px;
+  padding: 0.85rem 1.2rem;
+  background: var(--blue);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.button-secondary {
+  background: var(--blue-soft);
+  color: var(--navy);
+}
+
+.button-danger {
+  background: #f04438;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.helper-text,
+.status-text,
+.list-item p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.error-text {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.success-text {
+  margin: 0;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.stat-card h3,
+.card h3,
+.card h2 {
+  margin-top: 0;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.schedule-item {
+  align-items: center;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  background: var(--blue-soft);
+  border-radius: 999px;
+  color: var(--navy);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .site-header,
+  .page-heading,
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-grid,
+  .schedule-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+}
