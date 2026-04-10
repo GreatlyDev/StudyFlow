@@ -12,6 +12,7 @@ backend/studyflow.db
 # Node
 frontend/node_modules/
 frontend/dist/
+frontend/*.log
 
 # Local environment files
 .env

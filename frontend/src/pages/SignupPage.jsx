@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
+import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
 
 export default function SignupPage() {
@@ -51,74 +52,69 @@ export default function SignupPage() {
   };
 
   return (
-    <section className="auth-page">
-      <div className="card auth-card">
-        <p className="eyebrow">Get Started</p>
-        <h2>Create your StudyFlow account</h2>
-        <p className="helper-text">
-          This account will store your personal schedule and study data.
-        </p>
+    <AuthShell
+      eyebrow="Get Started"
+      title="Create your StudyFlow account"
+      subtitle="Start with a clean student workspace for courses, assignments, schedules, and future AI study recommendations."
+      footerText="Already have an account?"
+      footerLinkLabel="Login here."
+      footerLinkTo="/login"
+    >
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="field-label">
+          Full Name
+          <input
+            type="text"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleChange}
+            placeholder="Great-Anthony Umukoro"
+            required
+          />
+        </label>
 
-        <form className="form-stack" onSubmit={handleSubmit}>
-          <label>
-            Full Name
-            <input
-              type="text"
-              name="full_name"
-              value={formData.full_name}
-              onChange={handleChange}
-              placeholder="Great-Anthony Umukoro"
-              required
-            />
-          </label>
+        <label className="field-label">
+          Email
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="student@example.com"
+            required
+          />
+        </label>
 
-          <label>
-            Email
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="student@example.com"
-              required
-            />
-          </label>
+        <label className="field-label">
+          Password
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Create a password"
+            required
+          />
+        </label>
 
-          <label>
-            Password
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a password"
-              required
-            />
-          </label>
+        <label className="field-label">
+          Confirm Password
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="Repeat your password"
+            required
+          />
+        </label>
 
-          <label>
-            Confirm Password
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Repeat your password"
-              required
-            />
-          </label>
+        {error ? <p className="error-text">{error}</p> : null}
 
-          {error ? <p className="error-text">{error}</p> : null}
-
-          <button type="submit" className="button" disabled={isSubmitting}>
-            {isSubmitting ? "Creating account..." : "Sign Up"}
-          </button>
-        </form>
-
-        <p className="helper-text">
-          Already have an account? <Link to="/login">Login here.</Link>
-        </p>
-      </div>
-    </section>
+        <button type="submit" className="primary-button" disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Sign Up"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
