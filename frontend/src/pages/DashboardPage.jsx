@@ -1,24 +1,29 @@
 import { useEffect, useState } from "react";
 
-import { scheduleApi } from "../api/client";
+import { courseApi, scheduleApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 export default function DashboardPage() {
   const { token, user } = useAuth();
+  const [courses, setCourses] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadSchedules() {
+    async function loadDashboardData() {
       try {
-        const items = await scheduleApi.list(token);
-        setSchedules(items);
+        const [scheduleItems, courseItems] = await Promise.all([
+          scheduleApi.list(token),
+          courseApi.list(token),
+        ]);
+        setSchedules(scheduleItems);
+        setCourses(courseItems);
       } catch (requestError) {
         setError(requestError.message);
       }
     }
 
-    loadSchedules();
+    loadDashboardData();
   }, [token]);
 
   const upcomingSchedules = schedules.slice(0, 3);
@@ -37,6 +42,12 @@ export default function DashboardPage() {
 
       <div className="dashboard-grid">
         <article className="card stat-card">
+          <h3>Courses</h3>
+          <p className="stat-number">{courses.length}</p>
+          <p className="helper-text">Courses added so far for your semester plan.</p>
+        </article>
+
+        <article className="card stat-card">
           <h3>Schedule Items</h3>
           <p className="stat-number">{schedules.length}</p>
           <p className="helper-text">Study sessions currently saved to your account.</p>
@@ -46,12 +57,6 @@ export default function DashboardPage() {
           <h3>Next Deadline View</h3>
           <p className="stat-number">{upcomingSchedules.length}</p>
           <p className="helper-text">Upcoming study blocks shown from your saved schedule list.</p>
-        </article>
-
-        <article className="card stat-card">
-          <h3>AI Foundation</h3>
-          <p className="stat-number">Ready</p>
-          <p className="helper-text">AI recommendations are placeholders for a future sprint.</p>
         </article>
       </div>
 

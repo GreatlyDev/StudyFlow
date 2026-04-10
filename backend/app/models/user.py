@@ -20,3 +20,8 @@ class User(Base):
         back_populates="owner",
         cascade="all, delete-orphan",
     )
+    courses = relationship(
+        "Course",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
