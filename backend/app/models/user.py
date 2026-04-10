@@ -25,3 +25,8 @@ class User(Base):
         back_populates="owner",
         cascade="all, delete-orphan",
     )
+    assignments = relationship(
+        "Assignment",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )

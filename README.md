@@ -76,6 +76,10 @@ npm.cmd run dev
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
+- `POST /api/assignments`
+- `GET /api/assignments`
+- `PUT /api/assignments/{id}`
+- `DELETE /api/assignments/{id}`
 - `POST /api/courses`
 - `GET /api/courses`
 - `PUT /api/courses/{id}`
