@@ -10,6 +10,7 @@ import FlashcardsPage from "./pages/FlashcardsPage";
 import LoginPage from "./pages/LoginPage";
 import SchedulePage from "./pages/SchedulePage";
 import SignupPage from "./pages/SignupPage";
+import StudyMaterialsPage from "./pages/StudyMaterialsPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/flashcards" element={<FlashcardsPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/study-materials" element={<StudyMaterialsPage />} />
         </Route>
       </Route>
 

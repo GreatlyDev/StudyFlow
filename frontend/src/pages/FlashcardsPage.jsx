@@ -17,7 +17,7 @@ export default function FlashcardsPage() {
           <div className="list-stack">
             <div className="mini-summary-card">
               <span className="mini-summary-label">Step 1</span>
-              <strong>Upload or enter study notes.</strong>
+              <strong>Save study material in the Study Materials tab.</strong>
             </div>
             <div className="mini-summary-card">
               <span className="mini-summary-label">Step 2</span>
