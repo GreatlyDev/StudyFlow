@@ -154,6 +154,38 @@ export const assignmentApi = {
   },
 };
 
+export const studyMaterialApi = {
+  list(token) {
+    return apiRequest("/study-materials", {
+      method: "GET",
+      token,
+    });
+  },
+
+  create(token, payload) {
+    return apiRequest("/study-materials", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
+  update(token, materialId, payload) {
+    return apiRequest(`/study-materials/${materialId}`, {
+      method: "PUT",
+      token,
+      body: payload,
+    });
+  },
+
+  remove(token, materialId) {
+    return apiRequest(`/study-materials/${materialId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+};
+
 export const dashboardApi = {
   getSummary(token) {
     return apiRequest("/dashboard/summary", {

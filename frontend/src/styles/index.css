@@ -440,6 +440,18 @@ label {
   align-items: center;
 }
 
+.study-material-item {
+  align-items: flex-start;
+}
+
+.material-preview {
+  margin-top: 8px;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .tag,
 .insight-chip {
   display: inline-flex;
