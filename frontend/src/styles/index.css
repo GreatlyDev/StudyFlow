@@ -95,13 +95,15 @@ label {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .app-layout {
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
 }
 
 .sidebar {
@@ -112,6 +114,8 @@ label {
   flex-direction: column;
   padding: 32px 24px;
   flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .brand,
@@ -215,6 +219,7 @@ label {
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .header {
@@ -677,6 +682,59 @@ label {
   border-radius: 999px;
   background: #71f0bd;
   box-shadow: 0 0 0 6px rgba(113, 240, 189, 0.14);
+}
+
+.reminder-alert {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  z-index: 30;
+  width: min(420px, calc(100vw - 48px));
+  border: 1px solid var(--border-dark);
+  border-radius: 24px;
+  padding: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(113, 240, 189, 0.22), transparent 34%),
+    linear-gradient(135deg, #272c44 0%, #323854 100%);
+  color: var(--text-white);
+  box-shadow: 0 22px 46px rgba(30, 35, 53, 0.26);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: reminderAlertIn 0.25s ease-out;
+}
+
+.reminder-alert .eyebrow,
+.reminder-alert p {
+  color: var(--text-white-muted);
+}
+
+.reminder-alert h3 {
+  margin: 0 0 6px;
+}
+
+.reminder-alert-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reminder-alert .button-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-white);
+}
+
+@keyframes reminderAlertIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .section-header {
@@ -1166,12 +1224,20 @@ label {
 }
 
 @media (max-width: 900px) {
+  .app-shell {
+    height: auto;
+    overflow: visible;
+  }
+
   .app-layout {
     flex-direction: column;
+    height: auto;
   }
 
   .sidebar {
     width: 100%;
+    height: auto;
+    overflow: visible;
     padding: 24px 20px 16px;
     gap: 20px;
   }
@@ -1242,5 +1308,10 @@ label {
   .study-flip-card {
     min-height: 260px;
     padding: 28px 20px;
+  }
+
+  .reminder-alert {
+    right: 16px;
+    bottom: 16px;
   }
 }
