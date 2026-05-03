@@ -83,6 +83,44 @@ class AiRecommendationServiceTest(unittest.TestCase):
         self.assertIn("Cellular Respiration Quiz", result["recommendations"][0]["title"])
         self.assertTrue(any(item["category"] == "Flashcards" for item in result["recommendations"]))
 
+    def test_uses_openai_provider_when_it_returns_recommendations(self):
+        def fake_openai_provider(foundation_data):
+            return {
+                "summary": "OpenAI reviewed the study data and suggested a focused biology review.",
+                "recommendations": [
+                    {
+                        "category": "AI Plan",
+                        "title": "Start with biology flashcards",
+                        "reason": "Active recall will help before the quiz.",
+                        "action": "Spend 20 minutes in Test Yourself mode.",
+                        "priority": "high",
+                    }
+                ],
+            }
+
+        result = build_study_recommendations(
+            self.db,
+            self.user.id,
+            ai_provider=fake_openai_provider,
+        )
+
+        self.assertEqual(result["status"], "openai")
+        self.assertEqual(result["recommendation_count"], 1)
+        self.assertEqual(result["recommendations"][0]["category"], "AI Plan")
+
+    def test_falls_back_to_foundation_when_openai_provider_fails(self):
+        def failing_openai_provider(_foundation_data):
+            raise RuntimeError("OpenAI unavailable")
+
+        result = build_study_recommendations(
+            self.db,
+            self.user.id,
+            ai_provider=failing_openai_provider,
+        )
+
+        self.assertEqual(result["status"], "foundation")
+        self.assertGreaterEqual(result["recommendation_count"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

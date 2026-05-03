@@ -16,6 +16,7 @@ from app.services.ai_service import (
     get_ai_explanation_placeholder,
     get_ai_recommendation_placeholder,
 )
+from app.services.openai_recommendation_service import build_openai_recommendation_provider
 
 router = APIRouter(prefix="/ai", tags=["AI Placeholder"])
 
@@ -35,4 +36,7 @@ def get_study_recommendations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> AiStudyRecommendationResponse:
-    return AiStudyRecommendationResponse(**build_study_recommendations(db, current_user.id))
+    ai_provider = build_openai_recommendation_provider()
+    return AiStudyRecommendationResponse(
+        **build_study_recommendations(db, current_user.id, ai_provider=ai_provider)
+    )

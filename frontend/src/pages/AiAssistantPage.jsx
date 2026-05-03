@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { aiApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
+function getAiModeLabel(status) {
+  return status === "openai" ? "OpenAI connected" : "Foundation mode";
+}
+
 export default function AiAssistantPage() {
   const { token } = useAuth();
   const [explanationPreview, setExplanationPreview] = useState(null);
@@ -72,13 +76,14 @@ export default function AiAssistantPage() {
         <article className="card">
           <h3>Current status</h3>
           <p className="helper-text">
-            StudyFlow is currently using a rule-based AI foundation endpoint. This gives the
-            prototype useful recommendations now and leaves a clean place to connect OpenAI next.
+            {recommendationData?.status === "openai"
+              ? "StudyFlow is using the backend OpenAI integration to shape recommendations from your study data."
+              : "StudyFlow is using the rule-based foundation if OpenAI is not configured or unavailable, so the presentation stays reliable."}
           </p>
 
           <div className="insight-chip-row">
             <span className="insight-chip">Prototype mode</span>
-            <span className="insight-chip">{recommendationData?.status || "foundation"}</span>
+            <span className="insight-chip">{getAiModeLabel(recommendationData?.status)}</span>
             <span className="insight-chip">
               {recommendationData?.recommendation_count ?? 0} recommendations
             </span>
