@@ -12,6 +12,7 @@ from app.routes.courses import router as courses_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.flashcards import router as flashcards_router
 from app.routes.health import router as health_router
+from app.routes.quizzes import router as quizzes_router
 from app.routes.schedules import router as schedules_router
 from app.routes.study_materials import router as study_materials_router
 
@@ -44,5 +45,6 @@ app.include_router(assignments_router, prefix="/api")
 app.include_router(courses_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(flashcards_router, prefix="/api")
+app.include_router(quizzes_router, prefix="/api")
 app.include_router(schedules_router, prefix="/api")
 app.include_router(study_materials_router, prefix="/api")

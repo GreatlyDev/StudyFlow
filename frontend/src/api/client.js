@@ -247,4 +247,18 @@ export const aiApi = {
       method: "GET",
     });
   },
+
+  getExplanationPlaceholder() {
+    return apiRequest("/ai/explanation-placeholder", {
+      method: "GET",
+    });
+  },
+};
+
+export const quizApi = {
+  getPlaceholder() {
+    return apiRequest("/quizzes/placeholder", {
+      method: "GET",
+    });
+  },
 };
