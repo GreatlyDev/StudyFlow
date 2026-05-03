@@ -456,6 +456,71 @@ label {
   min-height: 100%;
 }
 
+.study-mode-panel {
+  border-radius: var(--radius-huge);
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.2), transparent 34%),
+    var(--brand-dark);
+  color: var(--text-white);
+  box-shadow: 0 20px 45px rgba(30, 35, 53, 0.18);
+}
+
+.study-mode-topbar,
+.study-mode-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.study-mode-topbar {
+  margin-bottom: 24px;
+}
+
+.study-mode-panel .eyebrow,
+.study-mode-panel .helper-text {
+  color: var(--text-white-muted);
+}
+
+.study-flip-card {
+  width: 100%;
+  min-height: 320px;
+  border: 1px solid var(--border-dark);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.study-flip-card:hover {
+  transform: translateY(-2px);
+}
+
+.study-flip-card.is-flipped {
+  background: rgba(94, 98, 241, 0.3);
+}
+
+.study-flip-card strong {
+  max-width: 860px;
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  line-height: 1.15;
+}
+
+.study-mode-controls {
+  justify-content: center;
+  margin-top: 18px;
+}
+
 .flashcard-review {
   display: flex;
   flex-direction: column;

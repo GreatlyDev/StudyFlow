@@ -97,6 +97,25 @@ function FlashcardsIcon() {
   );
 }
 
+function QuizIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.3-3 4" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
 function MaterialsIcon() {
   return (
     <svg
@@ -133,6 +152,7 @@ const navGroups = [
       { to: "/assistant", label: "AI Assistant", icon: <AssistantIcon /> },
       { to: "/study-materials", label: "Study Materials", icon: <MaterialsIcon /> },
       { to: "/flashcards", label: "Flashcards", icon: <FlashcardsIcon /> },
+      { to: "/practice-quizzes", label: "Practice Quizzes", icon: <QuizIcon /> },
     ],
   },
 ];
@@ -144,6 +164,7 @@ const pageTitles = {
   "/assignments": "Assignments",
   "/assistant": "AI Assistant",
   "/flashcards": "Flashcards",
+  "/practice-quizzes": "Practice Quizzes",
   "/study-materials": "Study Materials",
 };
 

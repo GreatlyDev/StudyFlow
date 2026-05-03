@@ -1,4 +1,24 @@
+import { useEffect, useState } from "react";
+
+import { aiApi } from "../api/client";
+
 export default function AiAssistantPage() {
+  const [explanationPreview, setExplanationPreview] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadExplanationPreview() {
+      try {
+        const data = await aiApi.getExplanationPlaceholder();
+        setExplanationPreview(data);
+      } catch (requestError) {
+        setError(requestError.message);
+      }
+    }
+
+    loadExplanationPreview();
+  }, []);
+
   return (
     <section className="page">
       <div className="page-heading">
@@ -11,6 +31,8 @@ export default function AiAssistantPage() {
           planning features.
         </p>
       </div>
+
+      {error ? <p className="error-text">{error}</p> : null}
 
       <div className="schedule-grid">
         <article className="card">
@@ -45,6 +67,26 @@ export default function AiAssistantPage() {
           </div>
         </article>
       </div>
+
+      <article className="card">
+        <h3>{explanationPreview?.title || "AI Concept Explanation"}</h3>
+        <p className="helper-text">
+          {explanationPreview
+            ? explanationPreview.sample_explanation
+            : "Loading sample explanation from the backend..."}
+        </p>
+
+        <div className="insight-chip-row">
+          <span className="insight-chip">
+            {explanationPreview?.sample_topic || "Sample concept"}
+          </span>
+          <span className="insight-chip">{explanationPreview?.status || "loading"}</span>
+        </div>
+
+        {explanationPreview?.next_step ? (
+          <p className="helper-text">{explanationPreview.next_step}</p>
+        ) : null}
+      </article>
     </section>
   );
 }

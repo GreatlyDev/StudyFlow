@@ -30,6 +30,7 @@ export default function FlashcardsPage() {
   const [editingId, setEditingId] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
+  const [isStudyModeOpen, setIsStudyModeOpen] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -147,6 +148,20 @@ export default function FlashcardsPage() {
     setIsAnswerVisible(false);
   };
 
+  const openStudyMode = () => {
+    if (flashcards.length === 0) {
+      return;
+    }
+    setActiveIndex(0);
+    setIsAnswerVisible(false);
+    setIsStudyModeOpen(true);
+  };
+
+  const closeStudyMode = () => {
+    setIsStudyModeOpen(false);
+    setIsAnswerVisible(false);
+  };
+
   const handleStatusChange = async (status) => {
     if (!activeCard) {
       return;
@@ -175,6 +190,75 @@ export default function FlashcardsPage() {
           Turn saved study material into question-and-answer cards for quick review sessions.
         </p>
       </div>
+
+      {isStudyModeOpen ? (
+        <article className="study-mode-panel">
+          <div className="study-mode-topbar">
+            <div>
+              <p className="eyebrow">Test Yourself</p>
+              <h2>Flashcard Study Mode</h2>
+            </div>
+            <button type="button" className="button button-secondary" onClick={closeStudyMode}>
+              Exit Study Mode
+            </button>
+          </div>
+
+          {activeCard ? (
+            <>
+              <button
+                type="button"
+                className={`study-flip-card ${isAnswerVisible ? "is-flipped" : ""}`}
+                onClick={() => setIsAnswerVisible((current) => !current)}
+              >
+                <span className="mini-summary-label">
+                  {isAnswerVisible ? "Answer" : "Question"}
+                </span>
+                <strong>{isAnswerVisible ? activeCard.answer : activeCard.question}</strong>
+                <span className="helper-text">
+                  {isAnswerVisible ? "Click to return to the question." : "Think first, then click to flip."}
+                </span>
+              </button>
+
+              <div className="study-mode-controls">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => moveReview(-1)}
+                >
+                  Previous
+                </button>
+                <span className="tag">
+                  {activeIndex + 1} of {flashcards.length}
+                </span>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => moveReview(1)}
+                >
+                  Next
+                </button>
+              </div>
+
+              <div className="study-mode-controls">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => handleStatusChange("reviewing")}
+                >
+                  Still Learning
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => handleStatusChange("mastered")}
+                >
+                  I Know This
+                </button>
+              </div>
+            </>
+          ) : null}
+        </article>
+      ) : null}
 
       <div className="schedule-grid">
         <article className="card">
@@ -285,6 +369,9 @@ export default function FlashcardsPage() {
               </div>
 
               <div className="button-row">
+                <button type="button" className="button" onClick={openStudyMode}>
+                  Test Yourself
+                </button>
                 <button
                   type="button"
                   className="button button-secondary"

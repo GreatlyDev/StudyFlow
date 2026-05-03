@@ -36,3 +36,11 @@ class AiPlaceholderResponse(BaseModel):
     status: str
     message: str
     next_step: str
+
+
+class AiExplanationPlaceholderResponse(BaseModel):
+    title: str
+    status: str
+    sample_topic: str
+    sample_explanation: str
+    next_step: str
