@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import ALLOWED_ORIGINS
 from app.db.base import Base
 from app.db.session import engine
-from app.models import assignment, course, flashcard, schedule, study_material, user  # noqa: F401
+from app.models import assignment, course, flashcard, password_reset, schedule, study_material, user  # noqa: F401
 from app.routes.assignments import router as assignments_router
 from app.routes.ai import router as ai_router
 from app.routes.auth import router as auth_router
