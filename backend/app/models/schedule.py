@@ -27,3 +27,8 @@ class Schedule(Base):
     )
 
     owner = relationship("User", back_populates="schedules")
+    reminders = relationship(
+        "Reminder",
+        back_populates="schedule",
+        cascade="all, delete-orphan",
+    )

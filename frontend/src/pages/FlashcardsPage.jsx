@@ -39,6 +39,8 @@ export default function FlashcardsPage() {
     materials.map((material) => [material.id, material.title]),
   );
   const activeCard = flashcards[activeIndex] || null;
+  const studyProgress =
+    flashcards.length === 0 ? 0 : Math.round(((activeIndex + 1) / flashcards.length) * 100);
 
   async function loadPageData() {
     try {
@@ -179,19 +181,9 @@ export default function FlashcardsPage() {
     }
   };
 
-  return (
-    <section className="page">
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">Study Tools</p>
-          <h2>Flashcards</h2>
-        </div>
-        <p className="helper-text">
-          Turn saved study material into question-and-answer cards for quick review sessions.
-        </p>
-      </div>
-
-      {isStudyModeOpen ? (
+  if (isStudyModeOpen) {
+    return (
+      <section className="page study-mode-page">
         <article className="study-mode-panel">
           <div className="study-mode-topbar">
             <div>
@@ -201,6 +193,18 @@ export default function FlashcardsPage() {
             <button type="button" className="button button-secondary" onClick={closeStudyMode}>
               Exit Study Mode
             </button>
+          </div>
+
+          <div className="study-progress-wrap" aria-label="Study progress">
+            <div>
+              <span className="mini-summary-label">Progress</span>
+              <strong>
+                Card {activeIndex + 1} of {flashcards.length}
+              </strong>
+            </div>
+            <div className="study-progress-track">
+              <span style={{ width: `${studyProgress}%` }} />
+            </div>
           </div>
 
           {activeCard ? (
@@ -215,7 +219,7 @@ export default function FlashcardsPage() {
                 </span>
                 <strong>{isAnswerVisible ? activeCard.answer : activeCard.question}</strong>
                 <span className="helper-text">
-                  {isAnswerVisible ? "Click to return to the question." : "Think first, then click to flip."}
+                  {materialTitleMap[activeCard.study_material_id] || "General flashcard"}
                 </span>
               </button>
 
@@ -227,9 +231,13 @@ export default function FlashcardsPage() {
                 >
                   Previous
                 </button>
-                <span className="tag">
-                  {activeIndex + 1} of {flashcards.length}
-                </span>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => setIsAnswerVisible((current) => !current)}
+                >
+                  {isAnswerVisible ? "Show Question" : "Reveal Answer"}
+                </button>
                 <button
                   type="button"
                   className="button button-secondary"
@@ -239,7 +247,7 @@ export default function FlashcardsPage() {
                 </button>
               </div>
 
-              <div className="study-mode-controls">
+              <div className="study-mode-controls study-mode-status-controls">
                 <button
                   type="button"
                   className="button button-secondary"
@@ -256,9 +264,25 @@ export default function FlashcardsPage() {
                 </button>
               </div>
             </>
-          ) : null}
+          ) : (
+            <p className="helper-text">No flashcards are available for this study session.</p>
+          )}
         </article>
-      ) : null}
+      </section>
+    );
+  }
+
+  return (
+    <section className="page">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Study Tools</p>
+          <h2>Flashcards</h2>
+        </div>
+        <p className="helper-text">
+          Turn saved study material into question-and-answer cards for quick review sessions.
+        </p>
+      </div>
 
       <div className="schedule-grid">
         <article className="card">
