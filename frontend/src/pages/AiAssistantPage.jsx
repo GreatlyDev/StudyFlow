@@ -1,23 +1,30 @@
 import { useEffect, useState } from "react";
 
 import { aiApi } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 
 export default function AiAssistantPage() {
+  const { token } = useAuth();
   const [explanationPreview, setExplanationPreview] = useState(null);
+  const [recommendationData, setRecommendationData] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadExplanationPreview() {
+    async function loadAiPageData() {
       try {
-        const data = await aiApi.getExplanationPlaceholder();
-        setExplanationPreview(data);
+        const [explanationData, recommendationPreview] = await Promise.all([
+          aiApi.getExplanationPlaceholder(),
+          aiApi.getRecommendations(token),
+        ]);
+        setExplanationPreview(explanationData);
+        setRecommendationData(recommendationPreview);
       } catch (requestError) {
         setError(requestError.message);
       }
     }
 
-    loadExplanationPreview();
-  }, []);
+    loadAiPageData();
+  }, [token]);
 
   return (
     <section className="page">
@@ -35,35 +42,46 @@ export default function AiAssistantPage() {
       {error ? <p className="error-text">{error}</p> : null}
 
       <div className="schedule-grid">
-        <article className="card">
-          <h3>Planned capabilities</h3>
-          <div className="list-stack">
-            <div className="mini-summary-card">
-              <span className="mini-summary-label">Study recommendations</span>
-              <strong>Suggest what to study next based on deadlines and workload.</strong>
-            </div>
-            <div className="mini-summary-card">
-              <span className="mini-summary-label">Concept help</span>
-              <strong>Explain difficult topics in simpler student-friendly language.</strong>
-            </div>
-            <div className="mini-summary-card">
-              <span className="mini-summary-label">Smart planning</span>
-              <strong>Generate balanced study sessions from your real schedule data.</strong>
-            </div>
+        <article className="card ai-recommendation-panel">
+          <div className="section-header section-header-tight">
+            <span>{recommendationData?.title || "AI Study Recommendations"}</span>
+          </div>
+
+          <p className="helper-text">
+            {recommendationData?.summary ||
+              "StudyFlow will use your current coursework to build recommendation cards."}
+          </p>
+
+          <div className="ai-recommendation-list">
+            {(recommendationData?.recommendations || []).map((recommendation) => (
+              <div key={`${recommendation.category}-${recommendation.title}`} className="ai-rec-card">
+                <div className="card-row">
+                  <span className="tag">{recommendation.category}</span>
+                  <span className={`priority-pill priority-${recommendation.priority}`}>
+                    {recommendation.priority}
+                  </span>
+                </div>
+                <h3>{recommendation.title}</h3>
+                <p>{recommendation.reason}</p>
+                <strong>{recommendation.action}</strong>
+              </div>
+            ))}
           </div>
         </article>
 
         <article className="card">
           <h3>Current status</h3>
           <p className="helper-text">
-            The backend structure is ready, but the real AI behavior is intentionally being saved
-            for a later phase of the project.
+            StudyFlow is currently using a rule-based AI foundation endpoint. This gives the
+            prototype useful recommendations now and leaves a clean place to connect OpenAI next.
           </p>
 
           <div className="insight-chip-row">
             <span className="insight-chip">Prototype mode</span>
-            <span className="insight-chip">UI placeholder</span>
-            <span className="insight-chip">Backend ready</span>
+            <span className="insight-chip">{recommendationData?.status || "foundation"}</span>
+            <span className="insight-chip">
+              {recommendationData?.recommendation_count ?? 0} recommendations
+            </span>
           </div>
         </article>
       </div>

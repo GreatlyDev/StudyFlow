@@ -285,6 +285,13 @@ export const aiApi = {
       method: "GET",
     });
   },
+
+  getRecommendations(token) {
+    return apiRequest("/ai/recommendations", {
+      method: "GET",
+      token,
+    });
+  },
 };
 
 export const quizApi = {
