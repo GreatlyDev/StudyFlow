@@ -2,6 +2,7 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import BrandMark from "./BrandMark";
+import ReminderAlerts from "./ReminderAlerts";
 
 function DashboardIcon() {
   return (
@@ -274,6 +275,8 @@ export default function Layout() {
           <div className="main-content">
             <Outlet />
           </div>
+
+          <ReminderAlerts />
         </main>
       </div>
     </div>
