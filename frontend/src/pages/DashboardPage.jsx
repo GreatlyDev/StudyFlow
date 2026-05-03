@@ -156,15 +156,15 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [summaryData, aiData, recommendationData, reminderItems] = await Promise.all([
+        const [summaryData, aiData, recommendationResult, reminderItems] = await Promise.all([
           dashboardApi.getSummary(token),
           aiApi.getPlaceholder(),
-          aiApi.getRecommendations(token),
+          aiApi.getRecommendations(token).catch(() => null),
           reminderApi.list(token),
         ]);
         setSummary(summaryData);
         setAiPlaceholder(aiData);
-        setAiRecommendations(recommendationData);
+        setAiRecommendations(recommendationResult);
         setReminders(reminderItems);
       } catch (requestError) {
         setError(requestError.message);
