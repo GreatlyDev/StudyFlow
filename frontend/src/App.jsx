@@ -7,7 +7,9 @@ import AssignmentsPage from "./pages/AssignmentsPage";
 import CoursesPage from "./pages/CoursesPage";
 import DashboardPage from "./pages/DashboardPage";
 import FlashcardsPage from "./pages/FlashcardsPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SchedulePage from "./pages/SchedulePage";
 import SignupPage from "./pages/SignupPage";
 import StudyMaterialsPage from "./pages/StudyMaterialsPage";
@@ -17,7 +19,9 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
         <Route element={<ProtectedRoute />}>

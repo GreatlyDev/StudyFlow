@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import AuthShell from "../components/AuthShell";
 import { useAuth } from "../context/AuthContext";
@@ -74,6 +74,10 @@ export default function LoginPage() {
         </label>
 
         {error ? <p className="error-text">{error}</p> : null}
+
+        <Link className="auth-inline-link" to="/forgot-password">
+          Forgot your password?
+        </Link>
 
         <button type="submit" className="primary-button" disabled={isSubmitting}>
           {isSubmitting ? "Logging in..." : "Login"}

@@ -56,6 +56,20 @@ export const authApi = {
       token,
     });
   },
+
+  forgotPassword(payload) {
+    return apiRequest("/auth/forgot-password", {
+      method: "POST",
+      body: payload,
+    });
+  },
+
+  resetPassword(payload) {
+    return apiRequest("/auth/reset-password", {
+      method: "POST",
+      body: payload,
+    });
+  },
 };
 
 export const scheduleApi = {

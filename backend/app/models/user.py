@@ -40,3 +40,8 @@ class User(Base):
         back_populates="owner",
         cascade="all, delete-orphan",
     )
+    password_reset_tokens = relationship(
+        "PasswordResetToken",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
