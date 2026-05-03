@@ -29,3 +29,8 @@ class Assignment(Base):
 
     owner = relationship("User", back_populates="assignments")
     course = relationship("Course", back_populates="assignments")
+    reminders = relationship(
+        "Reminder",
+        back_populates="assignment",
+        cascade="all, delete-orphan",
+    )

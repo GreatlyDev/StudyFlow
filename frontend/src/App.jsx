@@ -10,6 +10,7 @@ import FlashcardsPage from "./pages/FlashcardsPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
 import PracticeQuizzesPage from "./pages/PracticeQuizzesPage";
+import RemindersPage from "./pages/RemindersPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SchedulePage from "./pages/SchedulePage";
 import SignupPage from "./pages/SignupPage";
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/flashcards" element={<FlashcardsPage />} />
           <Route path="/practice-quizzes" element={<PracticeQuizzesPage />} />
+          <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/study-materials" element={<StudyMaterialsPage />} />
         </Route>

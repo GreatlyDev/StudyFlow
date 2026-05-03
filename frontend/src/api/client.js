@@ -232,6 +232,38 @@ export const flashcardApi = {
   },
 };
 
+export const reminderApi = {
+  list(token) {
+    return apiRequest("/reminders", {
+      method: "GET",
+      token,
+    });
+  },
+
+  create(token, payload) {
+    return apiRequest("/reminders", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
+  update(token, reminderId, payload) {
+    return apiRequest(`/reminders/${reminderId}`, {
+      method: "PUT",
+      token,
+      body: payload,
+    });
+  },
+
+  remove(token, reminderId) {
+    return apiRequest(`/reminders/${reminderId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+};
+
 export const dashboardApi = {
   getSummary(token) {
     return apiRequest("/dashboard/summary", {
