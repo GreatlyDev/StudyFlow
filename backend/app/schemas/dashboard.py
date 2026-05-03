@@ -44,3 +44,19 @@ class AiExplanationPlaceholderResponse(BaseModel):
     sample_topic: str
     sample_explanation: str
     next_step: str
+
+
+class AiStudyRecommendationItem(BaseModel):
+    category: str
+    title: str
+    reason: str
+    action: str
+    priority: str
+
+
+class AiStudyRecommendationResponse(BaseModel):
+    title: str
+    status: str
+    summary: str
+    recommendation_count: int
+    recommendations: list[AiStudyRecommendationItem]

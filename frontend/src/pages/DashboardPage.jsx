@@ -149,19 +149,22 @@ export default function DashboardPage() {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [aiPlaceholder, setAiPlaceholder] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [summaryData, aiData, reminderItems] = await Promise.all([
+        const [summaryData, aiData, recommendationData, reminderItems] = await Promise.all([
           dashboardApi.getSummary(token),
           aiApi.getPlaceholder(),
+          aiApi.getRecommendations(token),
           reminderApi.list(token),
         ]);
         setSummary(summaryData);
         setAiPlaceholder(aiData);
+        setAiRecommendations(recommendationData);
         setReminders(reminderItems);
       } catch (requestError) {
         setError(requestError.message);
@@ -254,7 +257,8 @@ export default function DashboardPage() {
             <p className="eyebrow">AI Foundation</p>
             <h3>{aiPlaceholder?.title || "AI Study Recommendations"}</h3>
             <p className="helper-text">
-              {aiPlaceholder?.message ||
+              {aiRecommendations?.summary ||
+                aiPlaceholder?.message ||
                 "AI recommendations are not fully implemented yet, but the project structure is ready."}
             </p>
 
@@ -262,6 +266,15 @@ export default function DashboardPage() {
               <span className="insight-chip">Courses: {summary?.course_count ?? 0}</span>
               <span className="insight-chip">Assignments: {summary?.assignment_count ?? 0}</span>
               <span className="insight-chip">Pending: {summary?.pending_assignment_count ?? 0}</span>
+            </div>
+
+            <div className="dashboard-ai-preview-list">
+              {(aiRecommendations?.recommendations || []).slice(0, 2).map((recommendation) => (
+                <div key={`${recommendation.category}-${recommendation.title}`} className="dashboard-ai-preview">
+                  <span className="tag">{recommendation.category}</span>
+                  <strong>{recommendation.title}</strong>
+                </div>
+              ))}
             </div>
 
             <div className="mini-summary-grid">
