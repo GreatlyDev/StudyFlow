@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { aiApi, dashboardApi } from "../api/client";
+import { aiApi, dashboardApi, reminderApi } from "../api/client";
 import CalendarWidget from "../components/CalendarWidget";
 import StudyPlanTimeline from "../components/StudyPlanTimeline";
 import { useAuth } from "../context/AuthContext";
@@ -52,6 +52,15 @@ function sortAssignments(items) {
     return (
       buildDate(first.due_date, first.due_time || "12:00").getTime() -
       buildDate(second.due_date, second.due_time || "12:00").getTime()
+    );
+  });
+}
+
+function sortReminders(items) {
+  return [...items].sort((first, second) => {
+    return (
+      buildDate(first.reminder_date, first.reminder_time || "23:59").getTime() -
+      buildDate(second.reminder_date, second.reminder_time || "23:59").getTime()
     );
   });
 }
@@ -140,17 +149,20 @@ export default function DashboardPage() {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [aiPlaceholder, setAiPlaceholder] = useState(null);
+  const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadDashboardData() {
       try {
-        const [summaryData, aiData] = await Promise.all([
+        const [summaryData, aiData, reminderItems] = await Promise.all([
           dashboardApi.getSummary(token),
           aiApi.getPlaceholder(),
+          reminderApi.list(token),
         ]);
         setSummary(summaryData);
         setAiPlaceholder(aiData);
+        setReminders(reminderItems);
       } catch (requestError) {
         setError(requestError.message);
       }
@@ -161,11 +173,14 @@ export default function DashboardPage() {
 
   const upcomingAssignments = sortAssignments(summary?.upcoming_deadlines || []);
   const upcomingSchedules = sortSchedules(summary?.upcoming_schedule_items || []);
+  const activeReminders = sortReminders(reminders.filter((reminder) => !reminder.is_done));
+  const nextReminder = activeReminders[0];
   const timelineItems = buildTimelineItems(summary);
 
   const eventDates = [
     ...upcomingAssignments.map((assignment) => assignment.due_date),
     ...upcomingSchedules.map((schedule) => schedule.schedule_date),
+    ...activeReminders.map((reminder) => reminder.reminder_date),
   ];
 
   const focusDateString =
@@ -175,6 +190,33 @@ export default function DashboardPage() {
   return (
     <div className="content-grid">
       <section className="schedule-section">
+        <div className="dashboard-hero-card">
+          <div>
+            <p className="eyebrow">StudyFlow Pulse</p>
+            <h2>{timelineItems[2]?.title || "Build today's study plan"}</h2>
+            <p>
+              {nextReminder
+                ? `Next reminder: ${nextReminder.title} at ${formatTimeLabel(nextReminder.reminder_time)}`
+                : "Connect courses, assignments, schedules, and reminders to keep the day organized."}
+            </p>
+          </div>
+
+          <div className="dashboard-hero-stats">
+            <span>
+              <strong>{summary?.course_count ?? 0}</strong>
+              Courses
+            </span>
+            <span>
+              <strong>{summary?.assignment_count ?? 0}</strong>
+              Assignments
+            </span>
+            <span>
+              <strong>{activeReminders.length}</strong>
+              Reminders
+            </span>
+          </div>
+        </div>
+
         <div className="section-header">
           <span>Study Plan</span>
           <button type="button" className="btn-icon" aria-label="More study plan options">
@@ -234,6 +276,32 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="insight-card dashboard-reminders-card">
+            <div className="section-header section-header-tight">
+              <span>Upcoming Reminders</span>
+            </div>
+
+            {activeReminders.length === 0 ? (
+              <p className="helper-text">
+                No active reminders yet. Add one from the Reminders page to show alerts here.
+              </p>
+            ) : (
+              <div className="dashboard-reminder-list">
+                {activeReminders.slice(0, 3).map((reminder) => (
+                  <div key={reminder.id} className="dashboard-reminder-item">
+                    <span className="notification-dot dashboard-reminder-dot" />
+                    <div>
+                      <strong>{reminder.title}</strong>
+                      <p>
+                        {reminder.reminder_date} | {formatTimeLabel(reminder.reminder_time)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="stats-panel">
             <div className="section-header section-header-tight">
               <span>Quick Snapshot</span>
@@ -254,6 +322,10 @@ export default function DashboardPage() {
               <div className="mini-summary-card">
                 <span className="mini-summary-label">Active Focus</span>
                 <strong>{timelineItems[2]?.title || "No task selected"}</strong>
+              </div>
+              <div className="mini-summary-card">
+                <span className="mini-summary-label">Active Reminders</span>
+                <strong>{activeReminders.length}</strong>
               </div>
             </div>
           </div>

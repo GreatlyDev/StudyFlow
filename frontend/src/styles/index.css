@@ -1057,6 +1057,96 @@ label {
   font-weight: 600;
 }
 
+.dashboard-hero-card {
+  margin-bottom: 28px;
+  border-radius: var(--radius-huge);
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(113, 240, 189, 0.18), transparent 32%),
+    linear-gradient(135deg, #272c44 0%, #323854 100%);
+  color: var(--text-white);
+  box-shadow: 0 22px 46px rgba(30, 35, 53, 0.16);
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 24px;
+}
+
+.dashboard-hero-card .eyebrow,
+.dashboard-hero-card p {
+  color: var(--text-white-muted);
+}
+
+.dashboard-hero-card h2 {
+  margin: 0 0 10px;
+  max-width: 720px;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.06em;
+}
+
+.dashboard-hero-stats {
+  min-width: 260px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-hero-stats span {
+  border: 1px solid var(--border-dark);
+  border-radius: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-white-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dashboard-hero-stats strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-white);
+  font-size: 1.7rem;
+  letter-spacing: -0.04em;
+}
+
+.dashboard-reminders-card {
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.14), transparent 34%),
+    var(--surface-white);
+}
+
+.dashboard-reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dashboard-reminder-item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--surface-offwhite);
+}
+
+.dashboard-reminder-item p {
+  margin-top: 4px;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+}
+
+.dashboard-reminder-dot {
+  position: static;
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
 .auth-layout {
   min-height: 100vh;
   display: grid;
@@ -1216,6 +1306,14 @@ label {
   .auth-preview-grid,
   .ai-placeholder-notes {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-hero-card {
+    flex-direction: column;
+  }
+
+  .dashboard-hero-stats {
+    min-width: 0;
   }
 
   .span-2 {
