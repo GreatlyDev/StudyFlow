@@ -35,3 +35,8 @@ class User(Base):
         back_populates="owner",
         cascade="all, delete-orphan",
     )
+    flashcards = relationship(
+        "Flashcard",
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )

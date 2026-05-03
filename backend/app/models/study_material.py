@@ -25,3 +25,8 @@ class StudyMaterial(Base):
 
     owner = relationship("User", back_populates="study_materials")
     course = relationship("Course", back_populates="study_materials")
+    flashcards = relationship(
+        "Flashcard",
+        back_populates="study_material",
+        cascade="all, delete-orphan",
+    )

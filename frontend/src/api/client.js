@@ -186,6 +186,38 @@ export const studyMaterialApi = {
   },
 };
 
+export const flashcardApi = {
+  list(token) {
+    return apiRequest("/flashcards", {
+      method: "GET",
+      token,
+    });
+  },
+
+  create(token, payload) {
+    return apiRequest("/flashcards", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
+  update(token, flashcardId, payload) {
+    return apiRequest(`/flashcards/${flashcardId}`, {
+      method: "PUT",
+      token,
+      body: payload,
+    });
+  },
+
+  remove(token, flashcardId) {
+    return apiRequest(`/flashcards/${flashcardId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+};
+
 export const dashboardApi = {
   getSummary(token) {
     return apiRequest("/dashboard/summary", {

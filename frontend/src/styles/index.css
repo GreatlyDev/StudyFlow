@@ -452,6 +452,41 @@ label {
   -webkit-line-clamp: 3;
 }
 
+.flashcard-review-card {
+  min-height: 100%;
+}
+
+.flashcard-review {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.flashcard-review h3 {
+  font-size: 1.45rem;
+  line-height: 1.35;
+}
+
+.review-answer {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--pattern-stripe);
+  color: var(--text-gray);
+  text-align: center;
+  line-height: 1.6;
+  padding: 24px;
+}
+
+.review-answer.is-visible {
+  background: rgba(94, 98, 241, 0.08);
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
 .tag,
 .insight-chip {
   display: inline-flex;
