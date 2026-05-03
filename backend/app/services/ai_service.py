@@ -1,3 +1,5 @@
+from typing import Any, Callable
+
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,8 @@ from app.models.course import Course
 from app.models.flashcard import Flashcard
 from app.models.reminder import Reminder
 from app.models.schedule import Schedule
+
+AiProvider = Callable[[dict[str, Any]], dict[str, Any] | None]
 
 
 def get_ai_recommendation_placeholder() -> dict[str, str]:
@@ -40,7 +44,65 @@ def get_ai_explanation_placeholder() -> dict[str, str]:
     }
 
 
-def build_study_recommendations(db: Session, user_id: int) -> dict:
+def _as_text(value: Any, fallback: str) -> str:
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    return fallback
+
+
+def _build_openai_response(
+    foundation_response: dict[str, Any],
+    provider_response: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not provider_response or not isinstance(provider_response, dict):
+        return None
+
+    provider_items = provider_response.get("recommendations")
+    if not isinstance(provider_items, list) or not provider_items:
+        return None
+
+    recommendations: list[dict[str, str]] = []
+    for item in provider_items[:5]:
+        if not isinstance(item, dict):
+            continue
+
+        priority = _as_text(item.get("priority"), "medium").lower()
+        if priority not in {"high", "medium", "low"}:
+            priority = "medium"
+
+        recommendations.append(
+            {
+                "category": _as_text(item.get("category"), "AI Plan"),
+                "title": _as_text(item.get("title"), "Review today's study priorities"),
+                "reason": _as_text(
+                    item.get("reason"),
+                    "StudyFlow used your current study data to shape this suggestion.",
+                ),
+                "action": _as_text(item.get("action"), "Pick one task and study for 20 minutes."),
+                "priority": priority,
+            }
+        )
+
+    if not recommendations:
+        return None
+
+    return {
+        "title": "AI Study Recommendations",
+        "status": "openai",
+        "summary": _as_text(
+            provider_response.get("summary"),
+            foundation_response["summary"],
+        ),
+        "recommendation_count": len(recommendations),
+        "recommendations": recommendations,
+    }
+
+
+def build_study_recommendations(
+    db: Session,
+    user_id: int,
+    ai_provider: AiProvider | None = None,
+) -> dict:
     """
     Rule-based recommendation foundation.
     This gives the UI real study guidance now and leaves a clean seam for OpenAI later.
@@ -142,7 +204,7 @@ def build_study_recommendations(db: Session, user_id: int) -> dict:
 
     visible_recommendations = recommendations[:5]
 
-    return {
+    foundation_response = {
         "title": "AI Study Recommendations",
         "status": "foundation",
         "summary": (
@@ -153,3 +215,17 @@ def build_study_recommendations(db: Session, user_id: int) -> dict:
         "recommendation_count": len(visible_recommendations),
         "recommendations": visible_recommendations,
     }
+
+    if ai_provider:
+        try:
+            openai_response = _build_openai_response(
+                foundation_response,
+                ai_provider(foundation_response),
+            )
+            if openai_response:
+                return openai_response
+        except Exception:
+            # Presentation safety: never let AI availability break the app.
+            pass
+
+    return foundation_response

@@ -65,6 +65,10 @@ function sortReminders(items) {
   });
 }
 
+function getAiModeLabel(status) {
+  return status === "openai" ? "OpenAI connected" : "Foundation mode";
+}
+
 function buildTimelineItems(summary) {
   const schedules = sortSchedules(summary?.upcoming_schedule_items || []);
   const assignments = sortAssignments(summary?.upcoming_deadlines || []);
@@ -263,6 +267,7 @@ export default function DashboardPage() {
             </p>
 
             <div className="insight-chip-row">
+              <span className="insight-chip">{getAiModeLabel(aiRecommendations?.status)}</span>
               <span className="insight-chip">Courses: {summary?.course_count ?? 0}</span>
               <span className="insight-chip">Assignments: {summary?.assignment_count ?? 0}</span>
               <span className="insight-chip">Pending: {summary?.pending_assignment_count ?? 0}</span>
