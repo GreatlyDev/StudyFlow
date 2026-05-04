@@ -909,6 +909,19 @@ label {
   flex: 1;
 }
 
+.timeline-empty-state {
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.08), transparent 32%),
+    var(--surface-offwhite);
+}
+
+.timeline-empty-state h3 {
+  margin: 8px 0;
+}
+
 .card-row {
   display: flex;
   justify-content: space-between;
@@ -1137,6 +1150,7 @@ label {
   color: var(--text-dark);
   font-size: 1rem;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .mini-summary-label {
@@ -1250,7 +1264,8 @@ label {
 
 .dashboard-ai-preview {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border-light);
@@ -1259,7 +1274,23 @@ label {
 }
 
 .dashboard-ai-preview strong {
+  min-width: 0;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-context-card {
+  margin-top: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background: var(--surface-offwhite);
+}
+
+.dashboard-context-card strong {
+  display: block;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
 }
 
 .ai-recommendation-panel {

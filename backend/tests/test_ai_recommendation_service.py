@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, datetime, time
 import unittest
 
 from sqlalchemy import create_engine
@@ -57,7 +57,7 @@ class AiRecommendationServiceTest(unittest.TestCase):
         schedule = Schedule(
             user_id=self.user.id,
             title="Biology review block",
-            schedule_date=date(2026, 5, 3),
+            schedule_date=date(2026, 5, 4),
             start_time=time(18, 0),
             end_time=time(19, 0),
         )
@@ -65,7 +65,7 @@ class AiRecommendationServiceTest(unittest.TestCase):
             user_id=self.user.id,
             title="Review quiz notes",
             reminder_type="assignment",
-            reminder_date=date(2026, 5, 3),
+            reminder_date=date(2026, 5, 4),
             reminder_time=time(16, 45),
         )
         flashcard = Flashcard(
@@ -77,7 +77,11 @@ class AiRecommendationServiceTest(unittest.TestCase):
         self.db.add_all([assignment, schedule, reminder, flashcard])
         self.db.commit()
 
-        result = build_study_recommendations(self.db, self.user.id)
+        result = build_study_recommendations(
+            self.db,
+            self.user.id,
+            now=datetime(2026, 5, 4, 12, 0),
+        )
 
         self.assertEqual(result["status"], "foundation")
         self.assertEqual(result["recommendation_count"], 4)
@@ -108,6 +112,42 @@ class AiRecommendationServiceTest(unittest.TestCase):
         self.assertEqual(result["status"], "openai")
         self.assertEqual(result["recommendation_count"], 1)
         self.assertEqual(result["recommendations"][0]["category"], "AI Plan")
+
+    def test_ignores_past_schedules_and_reminders(self):
+        past_schedule = Schedule(
+            user_id=self.user.id,
+            title="Expired study block",
+            schedule_date=date(2026, 5, 3),
+            start_time=time(10, 0),
+            end_time=time(11, 0),
+        )
+        future_reminder = Reminder(
+            user_id=self.user.id,
+            title="Future review",
+            reminder_type="general",
+            reminder_date=date(2026, 5, 4),
+            reminder_time=time(18, 0),
+        )
+        past_reminder = Reminder(
+            user_id=self.user.id,
+            title="Past reminder",
+            reminder_type="general",
+            reminder_date=date(2026, 5, 3),
+            reminder_time=time(18, 0),
+        )
+        self.db.add_all([past_schedule, future_reminder, past_reminder])
+        self.db.commit()
+
+        result = build_study_recommendations(
+            self.db,
+            self.user.id,
+            now=datetime(2026, 5, 4, 12, 0),
+        )
+
+        recommendation_titles = [item["title"] for item in result["recommendations"]]
+        self.assertIn("Do not miss: Future review", recommendation_titles)
+        self.assertNotIn("Do not miss: Past reminder", recommendation_titles)
+        self.assertFalse(any("Expired study block" in title for title in recommendation_titles))
 
     def test_sends_saved_study_materials_to_openai_provider(self):
         material = StudyMaterial(

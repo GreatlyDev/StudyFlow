@@ -78,7 +78,7 @@ export default function FlashcardsPage() {
   const studyProgress =
     activeDeck.length === 0 ? 0 : Math.round(((activeIndex + 1) / activeDeck.length) * 100);
 
-  async function loadPageData() {
+  async function loadPageData(preferredSetTitle = "") {
     try {
       const [materialItems, flashcardItems] = await Promise.all([
         studyMaterialApi.list(token),
@@ -90,6 +90,10 @@ export default function FlashcardsPage() {
         const availableTitles = flashcardItems.map(getFlashcardSetTitle);
         if (availableTitles.length === 0) {
           return "";
+        }
+
+        if (preferredSetTitle && availableTitles.includes(preferredSetTitle)) {
+          return preferredSetTitle;
         }
 
         return availableTitles.includes(currentTitle) ? currentTitle : availableTitles[0];
@@ -168,13 +172,11 @@ export default function FlashcardsPage() {
 
     try {
       const generatedCards = await flashcardApi.generate(token, payload);
+      const generatedSetTitle = generatedCards[0]?.set_title || "";
       setSuccessMessage(`Generated ${generatedCards.length} flashcard(s).`);
-      if (generatedCards[0]?.set_title) {
-        setSelectedSetTitle(generatedCards[0].set_title);
-      }
       setActiveIndex(0);
       setIsAnswerVisible(false);
-      await loadPageData();
+      await loadPageData(generatedSetTitle);
     } catch (requestError) {
       setError(requestError.message);
     } finally {

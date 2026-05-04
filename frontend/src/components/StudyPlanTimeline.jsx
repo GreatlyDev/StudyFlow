@@ -74,6 +74,19 @@ function TimelineCard({ item }) {
 }
 
 export default function StudyPlanTimeline({ items }) {
+  if (items.length === 0) {
+    return (
+      <div className="timeline-empty-state">
+        <p className="eyebrow">No active study plan yet</p>
+        <h3>Add a schedule item or upcoming assignment to build this timeline.</h3>
+        <p className="helper-text">
+          StudyFlow will replace this message with real study blocks once your calendar has
+          upcoming work.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="timeline">
       {items.map((item) => (
