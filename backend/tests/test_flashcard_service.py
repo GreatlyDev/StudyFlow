@@ -192,6 +192,24 @@ class FlashcardServiceTest(unittest.TestCase):
 
         self.assertEqual(len(created_cards), 8)
 
+    def test_generate_flashcards_supports_software_engineering_topic(self):
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Computer Science 458: Introduction to Software Engineering",
+            count=5,
+        )
+
+        self.assertEqual(len(created_cards), 5)
+        self.assertTrue(
+            all(
+                card.set_title == "Computer Science 458: Introduction to Software Engineering"
+                for card in created_cards
+            )
+        )
+        self.assertIn("software", created_cards[0].answer.lower())
+
 
 if __name__ == "__main__":
     unittest.main()

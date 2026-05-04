@@ -59,6 +59,12 @@ def _starter_topic_content(topic: str) -> str:
             "data efficiently. Common examples include arrays, stacks, queues, linked lists, "
             "trees, and hash tables."
         ),
+        "Computer Science 458: Introduction to Software Engineering": (
+            "Software engineering is the disciplined process of planning, designing, building, "
+            "testing, documenting, and maintaining software systems. Key topics include the "
+            "software development life cycle, requirements, user stories, version control, "
+            "team roles, testing, maintenance, and project management tools like Trello and GitHub."
+        ),
         "Math: Algebra Review": (
             "Algebra uses variables, expressions, equations, and functions to represent "
             "relationships and solve unknown values."
