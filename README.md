@@ -3,11 +3,12 @@
 **AI Study Optimization Platform for students who want one organized place for classes, deadlines, study materials, flashcards, quizzes, reminders, and study planning.**
 
 <p>
-  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white">
-  <img alt="React" src="https://img.shields.io/badge/React-Vite-646CFF?style=for-the-badge&logo=react&logoColor=white">
-  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white">
-  <img alt="JWT" src="https://img.shields.io/badge/JWT-Authentication-111827?style=for-the-badge&logo=jsonwebtokens&logoColor=white">
-  <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-AI_Assistant-412991?style=for-the-badge&logo=openai&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Backend-00A884?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=007F67">
+  <img alt="React" src="https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react&logoColor=061B24&labelColor=149ECA">
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-Build_Tool-FFD62E?style=for-the-badge&logo=vite&logoColor=111827&labelColor=646CFF">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-Database-2F80ED?style=for-the-badge&logo=sqlite&logoColor=white&labelColor=003B57">
+  <img alt="JWT" src="https://img.shields.io/badge/JWT-Authentication-F97316?style=for-the-badge&logo=jsonwebtokens&logoColor=white&labelColor=DC2626">
+  <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-AI_Assistant-10A37F?style=for-the-badge&logo=openai&logoColor=white&labelColor=412991">
 </p>
 
 StudyFlow is a team-built COSC 458 software engineering project. The prototype helps students create an account, organize coursework, schedule study time, save study materials, generate flashcards, practice with quizzes, and receive simple AI-supported study recommendations.
