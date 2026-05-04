@@ -49,7 +49,7 @@ def _starter_topic_content(topic: str) -> str:
 def _fallback_generated_cards(context: dict[str, Any], count: int) -> list[dict[str, Any]]:
     title = context["topic"]
     content = context["content"]
-    templates = [
+    templates: list[dict[str, Any]] = [
         {
             "question": f"What is the main idea of {title}?",
             "answer": content[:220],
@@ -76,6 +76,20 @@ def _fallback_generated_cards(context: dict[str, Any], count: int) -> list[dict[
             "difficulty": 1,
         },
     ]
+
+    while len(templates) < count:
+        card_number = len(templates) + 1
+        templates.append(
+            {
+                "question": f"What is another important detail to remember about {title}? #{card_number}",
+                "answer": (
+                    "Review the saved material, identify one key term or process, and explain it "
+                    "in your own words."
+                ),
+                "difficulty": 2,
+            }
+        )
+
     return templates[:count]
 
 
@@ -133,6 +147,7 @@ def generate_flashcards_for_user(
             "topic": material.title,
             "content": material.content,
             "source_label": material.source_type,
+            "count": count,
         }
     else:
         selected_topic = topic or "Computer Science: Data Structures"
@@ -141,6 +156,7 @@ def generate_flashcards_for_user(
             "topic": selected_topic,
             "content": _starter_topic_content(selected_topic),
             "source_label": "starter topic",
+            "count": count,
         }
 
     generated_cards: list[dict[str, Any]] = []
@@ -150,8 +166,9 @@ def generate_flashcards_for_user(
         except Exception:
             generated_cards = []
 
-    if not generated_cards:
-        generated_cards = _normalize_generated_cards(_fallback_generated_cards(context, count), count)
+    if len(generated_cards) < count:
+        fallback_cards = _normalize_generated_cards(_fallback_generated_cards(context, count), count)
+        generated_cards = (generated_cards + fallback_cards)[:count]
 
     created_cards = [
         Flashcard(

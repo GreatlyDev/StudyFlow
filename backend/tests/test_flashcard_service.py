@@ -114,6 +114,7 @@ class FlashcardServiceTest(unittest.TestCase):
         def fake_provider(context):
             self.assertEqual(context["source_type"], "study_material")
             self.assertIn("Cellular respiration", context["content"])
+            self.assertEqual(context["count"], 2)
             return [
                 {
                     "question": "What does cellular respiration produce?",
@@ -139,6 +140,51 @@ class FlashcardServiceTest(unittest.TestCase):
         self.assertEqual(len(created_cards), 2)
         self.assertEqual(created_cards[0].study_material_id, self.material.id)
         self.assertEqual(created_cards[0].question, "What does cellular respiration produce?")
+
+    def test_generate_flashcards_tops_up_when_provider_returns_too_few_cards(self):
+        def short_provider(context):
+            self.assertEqual(context["count"], 5)
+            return [
+                {
+                    "question": "What does cellular respiration produce?",
+                    "answer": "It produces ATP.",
+                    "difficulty": 2,
+                },
+                {
+                    "question": "Where does glycolysis happen?",
+                    "answer": "Glycolysis happens in the cytoplasm.",
+                    "difficulty": 2,
+                },
+                {
+                    "question": "What starts cellular respiration?",
+                    "answer": "Glucose starts the process.",
+                    "difficulty": 1,
+                },
+            ]
+
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Biology: Cellular Respiration",
+            count=5,
+            ai_provider=short_provider,
+        )
+
+        self.assertEqual(len(created_cards), 5)
+        self.assertEqual(created_cards[0].question, "What does cellular respiration produce?")
+        self.assertIn("Biology: Cellular Respiration", created_cards[-1].question)
+
+    def test_generate_flashcards_supports_eight_card_sessions(self):
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Math: Algebra Review",
+            count=8,
+        )
+
+        self.assertEqual(len(created_cards), 8)
 
 
 if __name__ == "__main__":

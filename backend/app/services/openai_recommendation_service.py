@@ -42,9 +42,10 @@ class OpenAiFlashcardProvider:
         self.model = model
 
     def __call__(self, context: dict[str, Any]) -> list[dict[str, Any]] | None:
+        requested_count = context.get("count", 5)
         prompt = (
             "You are generating flashcards for StudyFlow. "
-            "Create clear active-recall flashcards from the provided context. "
+            f"Create exactly {requested_count} clear active-recall flashcards from the provided context. "
             "Return only valid JSON with this shape: "
             '{"flashcards":[{"question":"string","answer":"string","difficulty":1|2|3}]}. '
             "Keep answers concise, accurate, and useful for a student presentation demo.\n\n"

@@ -214,13 +214,16 @@ export default function FlashcardsPage() {
       return;
     }
 
+    const updatedCardId = activeCard.id;
     setError("");
     setSuccessMessage("");
 
     try {
-      await flashcardApi.update(token, activeCard.id, { status });
+      const updatedCard = await flashcardApi.update(token, updatedCardId, { status });
+      setFlashcards((currentCards) =>
+        currentCards.map((card) => (card.id === updatedCardId ? updatedCard : card)),
+      );
       setSuccessMessage(`Marked as ${status}.`);
-      await loadPageData();
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -295,14 +298,18 @@ export default function FlashcardsPage() {
               <div className="study-mode-controls study-mode-status-controls">
                 <button
                   type="button"
-                  className="button button-secondary"
+                  className={`button ${
+                    activeCard.status === "reviewing" ? "" : "button-secondary"
+                  }`}
                   onClick={() => handleStatusChange("reviewing")}
                 >
                   Still Learning
                 </button>
                 <button
                   type="button"
-                  className="button"
+                  className={`button ${
+                    activeCard.status === "mastered" ? "" : "button-secondary"
+                  }`}
                   onClick={() => handleStatusChange("mastered")}
                 >
                   I Know This
@@ -494,8 +501,8 @@ export default function FlashcardsPage() {
               </p>
               <h3>{activeCard.question}</h3>
 
-              <div className={`review-answer ${isAnswerVisible ? "is-visible" : ""}`}>
-                {isAnswerVisible ? activeCard.answer : "Tap reveal when you are ready to check."}
+              <div className="review-answer">
+                Open Test Yourself when you are ready to reveal answers and track progress.
               </div>
 
               <div className="insight-chip-row">
@@ -506,9 +513,6 @@ export default function FlashcardsPage() {
               </div>
 
               <div className="button-row">
-                <button type="button" className="button" onClick={openStudyMode}>
-                  Test Yourself
-                </button>
                 <button
                   type="button"
                   className="button button-secondary"
@@ -519,9 +523,9 @@ export default function FlashcardsPage() {
                 <button
                   type="button"
                   className="button"
-                  onClick={() => setIsAnswerVisible((current) => !current)}
+                  onClick={openStudyMode}
                 >
-                  {isAnswerVisible ? "Hide Answer" : "Reveal Answer"}
+                  Test Yourself
                 </button>
                 <button
                   type="button"
@@ -532,22 +536,6 @@ export default function FlashcardsPage() {
                 </button>
               </div>
 
-              <div className="button-row">
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => handleStatusChange("reviewing")}
-                >
-                  Keep Reviewing
-                </button>
-                <button
-                  type="button"
-                  className="button"
-                  onClick={() => handleStatusChange("mastered")}
-                >
-                  Mark Mastered
-                </button>
-              </div>
             </div>
           ) : (
             <p className="helper-text">
