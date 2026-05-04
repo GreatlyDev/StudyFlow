@@ -1273,8 +1273,8 @@ label {
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  width: min(54vw, 780px);
-  background: linear-gradient(90deg, rgba(21, 26, 45, 0.76), rgba(21, 26, 45, 0.12));
+  width: min(44vw, 620px);
+  background: linear-gradient(90deg, rgba(21, 26, 45, 0.56), rgba(21, 26, 45, 0.04));
   pointer-events: none;
 }
 
@@ -1302,18 +1302,18 @@ label {
 
 .auth-hero-layout .auth-copy {
   margin-top: auto;
-  margin-bottom: auto;
+  margin-bottom: 24px;
 }
 
 .auth-hero-layout .auth-copy h1 {
-  max-width: 620px;
-  font-size: clamp(3rem, 6vw, 5.8rem);
+  max-width: 420px;
+  font-size: clamp(2.6rem, 4.4vw, 4.8rem);
   text-shadow: 0 16px 42px rgba(5, 8, 20, 0.38);
 }
 
 .auth-hero-layout .auth-copy p:last-child {
-  max-width: 560px;
-  font-size: 1.1rem;
+  max-width: 360px;
+  font-size: 1rem;
 }
 
 .auth-copy p:last-child {
@@ -1491,6 +1491,10 @@ label {
     background: linear-gradient(180deg, rgba(21, 26, 45, 0.86), rgba(21, 26, 45, 0.2));
   }
 
+  .auth-hero-layout .auth-copy {
+    margin-bottom: 0;
+  }
+
   .auth-hero-layout .auth-panel {
     align-items: center;
     justify-content: center;
@@ -1583,7 +1587,7 @@ label {
   }
 
   .auth-hero-layout .auth-copy h1 {
-    font-size: 2.75rem;
+    font-size: 2.9rem;
   }
 
   .auth-hero-layout .auth-side,

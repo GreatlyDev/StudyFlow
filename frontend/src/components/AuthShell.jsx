@@ -24,31 +24,9 @@ export default function AuthShell({
         </div>
 
         <div className="auth-copy">
-          <p className="auth-kicker">AI Study Optimization</p>
-          <h1>Turn scattered study time into a focused plan.</h1>
-          <p>
-            Upload study material, organize deadlines, review flashcards, and let StudyFlow
-            help shape the next best study move.
-          </p>
-        </div>
-
-        <div className="auth-preview">
-          <div className="auth-preview-card auth-preview-card-primary">
-            <p>AI-powered focus</p>
-            <strong>Cellular Respiration Quiz</strong>
-            <span>Recommendation based on your materials and deadlines</span>
-          </div>
-
-          <div className="auth-preview-grid">
-            <div className="auth-preview-card">
-              <p>Study tools</p>
-              <strong>Flashcards + quizzes</strong>
-            </div>
-            <div className="auth-preview-card">
-              <p>Planning</p>
-              <strong>Schedules + reminders</strong>
-            </div>
-          </div>
+          <p className="auth-kicker">AI Study</p>
+          <h1>StudyFlow</h1>
+          <p>Your AI study optimization workspace. Let&apos;s shape your workflow.</p>
         </div>
       </div>
 
