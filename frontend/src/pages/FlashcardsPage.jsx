@@ -12,6 +12,11 @@ const emptyForm = {
 };
 
 const statusOptions = ["new", "reviewing", "mastered"];
+const starterTopics = [
+  "Biology: Cellular Respiration",
+  "Computer Science: Data Structures",
+  "Math: Algebra Review",
+];
 
 function getDifficultyLabel(value) {
   const labels = {
@@ -31,9 +36,16 @@ export default function FlashcardsPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
   const [isStudyModeOpen, setIsStudyModeOpen] = useState(false);
+  const [generatorData, setGeneratorData] = useState({
+    source_type: "starter_topic",
+    topic: starterTopics[0],
+    study_material_id: "",
+    count: "5",
+  });
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const materialTitleMap = Object.fromEntries(
     materials.map((material) => [material.id, material.title]),
@@ -65,6 +77,11 @@ export default function FlashcardsPage() {
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleGeneratorChange = (event) => {
+    const { name, value } = event.target;
+    setGeneratorData((current) => ({ ...current, [name]: value }));
   };
 
   const resetForm = () => {
@@ -100,6 +117,34 @@ export default function FlashcardsPage() {
       setError(requestError.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleGenerateFlashcards = async (event) => {
+    event.preventDefault();
+    setError("");
+    setSuccessMessage("");
+    setIsGenerating(true);
+
+    const payload = {
+      source_type: generatorData.source_type,
+      topic: generatorData.source_type === "starter_topic" ? generatorData.topic : null,
+      study_material_id:
+        generatorData.source_type === "study_material" && generatorData.study_material_id
+          ? Number(generatorData.study_material_id)
+          : null,
+      count: Number(generatorData.count),
+    };
+
+    try {
+      const generatedCards = await flashcardApi.generate(token, payload);
+      setSuccessMessage(`Generated ${generatedCards.length} flashcard(s).`);
+      setIsAnswerVisible(false);
+      await loadPageData();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -283,6 +328,74 @@ export default function FlashcardsPage() {
           Turn saved study material into question-and-answer cards for quick review sessions.
         </p>
       </div>
+
+      <article className="card ai-generator-card">
+        <div>
+          <p className="eyebrow">AI Flashcard Builder</p>
+          <h3>Generate study cards</h3>
+          <p className="helper-text">
+            Choose a starter subject or one of your saved study materials. StudyFlow will create
+            cards and save them into your review deck.
+          </p>
+        </div>
+
+        <form className="flashcard-generator-form" onSubmit={handleGenerateFlashcards}>
+          <label>
+            Source
+            <select
+              name="source_type"
+              value={generatorData.source_type}
+              onChange={handleGeneratorChange}
+            >
+              <option value="starter_topic">Starter subject</option>
+              <option value="study_material">Saved study material</option>
+            </select>
+          </label>
+
+          {generatorData.source_type === "starter_topic" ? (
+            <label>
+              Starter Topic
+              <select name="topic" value={generatorData.topic} onChange={handleGeneratorChange}>
+                {starterTopics.map((topic) => (
+                  <option key={topic} value={topic}>
+                    {topic}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <label>
+              Study Material
+              <select
+                name="study_material_id"
+                value={generatorData.study_material_id}
+                onChange={handleGeneratorChange}
+                required={generatorData.source_type === "study_material"}
+              >
+                <option value="">Choose material</option>
+                {materials.map((material) => (
+                  <option key={material.id} value={material.id}>
+                    {material.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <label>
+            Number of Cards
+            <select name="count" value={generatorData.count} onChange={handleGeneratorChange}>
+              <option value="3">3 cards</option>
+              <option value="5">5 cards</option>
+              <option value="8">8 cards</option>
+            </select>
+          </label>
+
+          <button type="submit" className="button" disabled={isGenerating}>
+            {isGenerating ? "Generating..." : "Generate Flashcards"}
+          </button>
+        </form>
+      </article>
 
       <div className="schedule-grid">
         <article className="card">

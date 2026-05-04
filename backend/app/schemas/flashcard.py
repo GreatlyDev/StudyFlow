@@ -23,6 +23,13 @@ class FlashcardUpdate(BaseModel):
     study_material_id: int | None = None
 
 
+class FlashcardGenerationRequest(BaseModel):
+    source_type: str = Field(default="starter_topic", pattern="^(starter_topic|study_material)$")
+    topic: str | None = Field(default=None, max_length=120)
+    study_material_id: int | None = None
+    count: int = Field(default=5, ge=1, le=8)
+
+
 class FlashcardResponse(FlashcardBase):
     id: int
     user_id: int

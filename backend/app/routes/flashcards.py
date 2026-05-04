@@ -6,14 +6,21 @@ from app.dependencies import get_current_user
 from app.models.flashcard import Flashcard
 from app.models.study_material import StudyMaterial
 from app.models.user import User
-from app.schemas.flashcard import FlashcardCreate, FlashcardResponse, FlashcardUpdate
+from app.schemas.flashcard import (
+    FlashcardCreate,
+    FlashcardGenerationRequest,
+    FlashcardResponse,
+    FlashcardUpdate,
+)
 from app.services.flashcard_service import (
     create_flashcard,
     delete_flashcard,
+    generate_flashcards_for_user,
     get_flashcard_for_user,
     list_flashcards_for_user,
     update_flashcard,
 )
+from app.services.openai_recommendation_service import build_openai_flashcard_provider
 
 router = APIRouter(prefix="/flashcards", tags=["Flashcards"])
 
@@ -64,6 +71,36 @@ def list_flashcards(
     current_user: User = Depends(get_current_user),
 ) -> list[FlashcardResponse]:
     return list_flashcards_for_user(db, current_user.id)
+
+
+@router.post(
+    "/generate",
+    response_model=list[FlashcardResponse],
+    status_code=status.HTTP_201_CREATED,
+)
+def generate_flashcards(
+    payload: FlashcardGenerationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[FlashcardResponse]:
+    if payload.source_type == "study_material":
+        validate_optional_material_ownership(db, payload.study_material_id, current_user.id)
+
+    try:
+        return generate_flashcards_for_user(
+            db,
+            current_user.id,
+            source_type=payload.source_type,
+            topic=payload.topic,
+            study_material_id=payload.study_material_id,
+            count=payload.count,
+            ai_provider=build_openai_flashcard_provider(),
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        ) from error
 
 
 @router.put("/{flashcard_id}", response_model=FlashcardResponse)

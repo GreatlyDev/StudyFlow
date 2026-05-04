@@ -216,6 +216,14 @@ export const flashcardApi = {
     });
   },
 
+  generate(token, payload) {
+    return apiRequest("/flashcards/generate", {
+      method: "POST",
+      token,
+      body: payload,
+    });
+  },
+
   update(token, flashcardId, payload) {
     return apiRequest(`/flashcards/${flashcardId}`, {
       method: "PUT",

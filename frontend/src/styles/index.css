@@ -531,6 +531,24 @@ label {
   min-height: 100%;
 }
 
+.ai-generator-card {
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: 24px;
+  align-items: end;
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.12), transparent 34%),
+    var(--surface-white);
+}
+
+.flashcard-generator-form {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.8fr) minmax(220px, 1.2fr) minmax(140px, 0.6fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+
 .study-mode-page {
   min-height: calc(100vh - 160px);
   justify-content: center;
@@ -1521,6 +1539,8 @@ label {
   .form-grid,
   .mini-summary-grid,
   .auth-layout,
+  .ai-generator-card,
+  .flashcard-generator-form,
   .auth-preview-grid,
   .study-material-stats,
   .ai-placeholder-notes {
