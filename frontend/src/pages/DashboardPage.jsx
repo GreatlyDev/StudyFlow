@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { aiApi, dashboardApi, reminderApi } from "../api/client";
+import { aiApi, dashboardApi, reminderApi, scheduleApi } from "../api/client";
 import CalendarWidget from "../components/CalendarWidget";
 import StudyPlanTimeline from "../components/StudyPlanTimeline";
 import { useAuth } from "../context/AuthContext";
@@ -65,6 +65,61 @@ function sortReminders(items) {
   });
 }
 
+function formatDateForApi(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTimeForApi(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function addMinutes(date, minutes) {
+  const nextDate = new Date(date);
+  nextDate.setMinutes(nextDate.getMinutes() + minutes);
+  return nextDate;
+}
+
+function roundToNextSlot(date, stepMinutes = 30) {
+  const roundedDate = new Date(date);
+  roundedDate.setSeconds(0, 0);
+
+  const minutes = roundedDate.getMinutes();
+  const remainder = minutes % stepMinutes;
+  const minutesToAdd = remainder === 0 ? stepMinutes : stepMinutes - remainder;
+  roundedDate.setMinutes(minutes + minutesToAdd);
+
+  return roundedDate;
+}
+
+function buildAiSuggestionSlot(index, now = new Date()) {
+  const firstSlot = roundToNextSlot(addMinutes(now, 60));
+  const suggestedStart = addMinutes(firstSlot, index * 60);
+
+  if (suggestedStart.getHours() >= 22) {
+    const tomorrowMorning = new Date(now);
+    tomorrowMorning.setDate(tomorrowMorning.getDate() + 1);
+    tomorrowMorning.setHours(9 + index, 0, 0, 0);
+    return {
+      start: tomorrowMorning,
+      end: addMinutes(tomorrowMorning, 45),
+    };
+  }
+
+  return {
+    start: suggestedStart,
+    end: addMinutes(suggestedStart, 45),
+  };
+}
+
+function getRecommendationKey(recommendation, index) {
+  return `${recommendation.category}-${recommendation.title}-${index}`;
+}
+
 function getAiModeLabel(status) {
   return status === "openai" ? "OpenAI connected" : "Foundation mode";
 }
@@ -73,7 +128,12 @@ function isFutureReminder(reminder, now = new Date()) {
   return buildDate(reminder.reminder_date, reminder.reminder_time || "23:59").getTime() >= now.getTime();
 }
 
-function buildTimelineItems(summary) {
+function buildTimelineItems(summary, recommendations = [], options = {}) {
+  const {
+    addedRecommendationKeys = new Set(),
+    onAddRecommendation,
+    savingRecommendationKey,
+  } = options;
   const schedules = sortSchedules(summary?.upcoming_schedule_items || []);
   const assignments = sortAssignments(summary?.upcoming_deadlines || []);
 
@@ -98,9 +158,35 @@ function buildTimelineItems(summary) {
     variant: index === 0 ? "primary" : "standard",
   }));
 
-  const items = [...scheduleItems, ...assignmentItems]
+  const aiSuggestionItems = recommendations
+    .slice(0, 3)
+    .map((recommendation, index) => {
+      const recommendationKey = getRecommendationKey(recommendation, index);
+      const suggestedSlot = buildAiSuggestionSlot(index);
+
+      return {
+        id: `ai-${recommendationKey}`,
+        recommendationKey,
+        sortDate: suggestedSlot.start,
+        timeLabel: formatTimeLabel(formatTimeForApi(suggestedSlot.start)),
+        subtitle: `${recommendation.category} - AI suggestion`,
+        title: recommendation.title,
+        footer: recommendation.action || recommendation.reason,
+        badge: "AI Suggestion",
+        variant: "ai",
+        actionLabel:
+          savingRecommendationKey === recommendationKey ? "Adding..." : "Add to Schedule",
+        actionDisabled: savingRecommendationKey === recommendationKey,
+        onAction: onAddRecommendation
+          ? () => onAddRecommendation(recommendation, index, suggestedSlot, recommendationKey)
+          : undefined,
+      };
+    })
+    .filter((item) => !addedRecommendationKeys.has(item.recommendationKey));
+
+  const items = [...scheduleItems, ...assignmentItems, ...aiSuggestionItems]
     .sort((first, second) => first.sortDate.getTime() - second.sortDate.getTime())
-    .slice(0, 5);
+    .slice(0, 6);
 
   return items.map((item, index) => ({
     ...item,
@@ -114,25 +200,59 @@ export default function DashboardPage() {
   const [aiRecommendations, setAiRecommendations] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [savingRecommendationKey, setSavingRecommendationKey] = useState("");
+  const [addedRecommendationKeys, setAddedRecommendationKeys] = useState(() => new Set());
+
+  async function loadDashboardData() {
+    try {
+      const [summaryData, recommendationResult, reminderItems] = await Promise.all([
+        dashboardApi.getSummary(token),
+        aiApi.getRecommendations(token).catch(() => null),
+        reminderApi.list(token),
+      ]);
+      setSummary(summaryData);
+      setAiRecommendations(recommendationResult);
+      setReminders(reminderItems);
+      setError("");
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const [summaryData, recommendationResult, reminderItems] = await Promise.all([
-          dashboardApi.getSummary(token),
-          aiApi.getRecommendations(token).catch(() => null),
-          reminderApi.list(token),
-        ]);
-        setSummary(summaryData);
-        setAiRecommendations(recommendationResult);
-        setReminders(reminderItems);
-      } catch (requestError) {
-        setError(requestError.message);
-      }
-    }
-
     loadDashboardData();
   }, [token]);
+
+  async function handleAddRecommendation(recommendation, index, suggestedSlot, recommendationKey) {
+    setError("");
+    setSuccessMessage("");
+    setSavingRecommendationKey(recommendationKey);
+
+    try {
+      await scheduleApi.create(token, {
+        title: recommendation.title,
+        description: recommendation.reason,
+        schedule_date: formatDateForApi(suggestedSlot.start),
+        start_time: formatTimeForApi(suggestedSlot.start),
+        end_time: formatTimeForApi(suggestedSlot.end),
+        location: "AI study plan",
+        notes: recommendation.action || "Added from StudyFlow AI recommendation.",
+      });
+
+      setAddedRecommendationKeys((currentKeys) => {
+        const nextKeys = new Set(currentKeys);
+        nextKeys.add(recommendationKey);
+        return nextKeys;
+      });
+      setSuccessMessage("AI recommendation added to your schedule.");
+      await loadDashboardData();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSavingRecommendationKey("");
+    }
+  }
 
   const upcomingAssignments = sortAssignments(summary?.upcoming_deadlines || []);
   const upcomingSchedules = sortSchedules(summary?.upcoming_schedule_items || []);
@@ -141,7 +261,11 @@ export default function DashboardPage() {
     reminders.filter((reminder) => !reminder.is_done && isFutureReminder(reminder, now)),
   );
   const nextReminder = activeReminders[0];
-  const timelineItems = buildTimelineItems(summary);
+  const timelineItems = buildTimelineItems(summary, aiRecommendations?.recommendations || [], {
+    addedRecommendationKeys,
+    onAddRecommendation: handleAddRecommendation,
+    savingRecommendationKey,
+  });
   const activeFocus = timelineItems.find((item) => item.variant === "primary") || timelineItems[0];
 
   const eventDates = [
@@ -207,6 +331,7 @@ export default function DashboardPage() {
         </div>
 
         {error ? <p className="error-text">{error}</p> : null}
+        {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
         <StudyPlanTimeline items={timelineItems} />
       </section>

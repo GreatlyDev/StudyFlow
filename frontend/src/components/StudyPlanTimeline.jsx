@@ -40,6 +40,38 @@ function TimelineCard({ item }) {
     );
   }
 
+  if (item.variant === "ai") {
+    return (
+      <div className="card-standard card-ai-suggestion">
+        <div className="card-row">
+          <div>
+            <div className="card-subtitle">{item.subtitle}</div>
+            <div className="card-title">{item.title}</div>
+          </div>
+          {item.badge ? (
+            <div className="badge-ai">
+              <SparkIcon />
+              {item.badge}
+            </div>
+          ) : null}
+        </div>
+        <div className="card-footer timeline-card-footer">
+          <span>{item.footer}</span>
+          {item.onAction ? (
+            <button
+              type="button"
+              className="button button-secondary timeline-action-button"
+              onClick={item.onAction}
+              disabled={item.actionDisabled}
+            >
+              {item.actionLabel}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   if (item.variant === "primary") {
     return (
       <div className="card-primary">
@@ -92,7 +124,9 @@ export default function StudyPlanTimeline({ items }) {
       {items.map((item) => (
         <div
           key={item.id}
-          className={`timeline-item ${item.variant === "primary" ? "active" : ""}`}
+          className={`timeline-item ${item.variant === "primary" ? "active" : ""} ${
+            item.variant === "ai" ? "ai-suggested" : ""
+          }`}
         >
           <div className="timeline-time">{item.timeLabel}</div>
           <div className="timeline-track">
