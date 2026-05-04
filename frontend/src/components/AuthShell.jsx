@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import landingHeroImage from "../assets/studyflow-landing-page.png";
 import BrandMark from "./BrandMark";
 
 export default function AuthShell({
@@ -12,7 +13,10 @@ export default function AuthShell({
   children,
 }) {
   return (
-    <section className="auth-layout">
+    <section
+      className="auth-layout auth-hero-layout"
+      style={{ "--auth-hero-image": `url(${landingHeroImage})` }}
+    >
       <div className="auth-side">
         <div className="auth-brand">
           <BrandMark />
@@ -21,28 +25,28 @@ export default function AuthShell({
 
         <div className="auth-copy">
           <p className="auth-kicker">AI Study Optimization</p>
-          <h1>Build a study routine that actually feels manageable.</h1>
+          <h1>Turn scattered study time into a focused plan.</h1>
           <p>
-            Keep courses, assignments, study blocks, and future AI guidance inside one
-            focused student workspace.
+            Upload study material, organize deadlines, review flashcards, and let StudyFlow
+            help shape the next best study move.
           </p>
         </div>
 
         <div className="auth-preview">
           <div className="auth-preview-card auth-preview-card-primary">
-            <p>Today&apos;s focus</p>
+            <p>AI-powered focus</p>
             <strong>Cellular Respiration Quiz</strong>
-            <span>AI recommended 2-hour focus session</span>
+            <span>Recommendation based on your materials and deadlines</span>
           </div>
 
           <div className="auth-preview-grid">
             <div className="auth-preview-card">
-              <p>Upcoming</p>
-              <strong>3 Assignments</strong>
+              <p>Study tools</p>
+              <strong>Flashcards + quizzes</strong>
             </div>
             <div className="auth-preview-card">
-              <p>Study plan</p>
-              <strong>4 Sessions</strong>
+              <p>Planning</p>
+              <strong>Schedules + reminders</strong>
             </div>
           </div>
         </div>
