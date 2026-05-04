@@ -8,6 +8,7 @@ from app.models.course import Course
 from app.models.flashcard import Flashcard
 from app.models.reminder import Reminder
 from app.models.schedule import Schedule
+from app.models.study_material import StudyMaterial
 
 AiProvider = Callable[[dict[str, Any]], dict[str, Any] | None]
 
@@ -137,6 +138,15 @@ def build_study_recommendations(
         ).all()
     )
 
+    study_materials = list(
+        db.scalars(
+            select(StudyMaterial)
+            .where(StudyMaterial.user_id == user_id)
+            .order_by(StudyMaterial.updated_at.desc(), StudyMaterial.title)
+            .limit(3)
+        ).all()
+    )
+
     difficult_flashcard_count = db.scalar(
         select(func.count())
         .select_from(Flashcard)
@@ -145,6 +155,8 @@ def build_study_recommendations(
     course_count = db.scalar(
         select(func.count()).select_from(Course).where(Course.user_id == user_id)
     )
+    course_rows = list(db.scalars(select(Course).where(Course.user_id == user_id)).all())
+    course_name_map = {course.id: course.name for course in course_rows}
 
     for assignment in assignments:
         priority = "high" if assignment.priority == 1 else "medium"
@@ -191,6 +203,17 @@ def build_study_recommendations(
             }
         )
 
+    for material in study_materials:
+        recommendations.append(
+            {
+                "category": "Study Material",
+                "title": f"Turn {material.title} into active recall",
+                "reason": "You saved this material, so it is ready to become flashcards, quiz questions, or a focused review block.",
+                "action": "Review the notes, then create flashcards for the hardest ideas.",
+                "priority": "medium",
+            }
+        )
+
     if not recommendations:
         recommendations.append(
             {
@@ -210,10 +233,21 @@ def build_study_recommendations(
         "summary": (
             f"StudyFlow reviewed {course_count or 0} course(s), {len(assignments)} active assignment(s), "
             f"{len(schedules)} study block(s), {len(reminders)} reminder(s), and "
-            f"{difficult_flashcard_count or 0} difficult flashcard(s)."
+            f"{difficult_flashcard_count or 0} difficult flashcard(s), plus "
+            f"{len(study_materials)} study material(s)."
         ),
         "recommendation_count": len(visible_recommendations),
         "recommendations": visible_recommendations,
+        "study_materials": [
+            {
+                "title": material.title,
+                "source_type": material.source_type,
+                "course_name": course_name_map.get(material.course_id, "General study material"),
+                "content_preview": material.content[:600],
+                "updated_at": material.updated_at,
+            }
+            for material in study_materials
+        ],
     }
 
     if ai_provider:
