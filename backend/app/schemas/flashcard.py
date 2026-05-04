@@ -9,6 +9,8 @@ class FlashcardBase(BaseModel):
     status: str = Field(default="new", max_length=30)
     difficulty: int = Field(default=2, ge=1, le=3)
     study_material_id: int | None = None
+    source_type: str = Field(default="manual", max_length=30)
+    set_title: str = Field(default="General flashcards", max_length=120)
 
 
 class FlashcardCreate(FlashcardBase):

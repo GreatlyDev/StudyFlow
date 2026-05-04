@@ -549,6 +549,13 @@ label {
   align-items: end;
 }
 
+.study-set-picker-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(260px, 0.5fr);
+  gap: 24px;
+  align-items: end;
+}
+
 .study-mode-page {
   min-height: calc(100vh - 160px);
   justify-content: center;
@@ -1541,6 +1548,7 @@ label {
   .auth-layout,
   .ai-generator-card,
   .flashcard-generator-form,
+  .study-set-picker-card,
   .auth-preview-grid,
   .study-material-stats,
   .ai-placeholder-notes {

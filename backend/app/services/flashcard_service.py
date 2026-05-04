@@ -19,8 +19,29 @@ def list_flashcards_for_user(db: Session, user_id: int) -> list[Flashcard]:
     return list(db.scalars(statement).all())
 
 
+def _material_set_title(db: Session, study_material_id: int | None, user_id: int) -> str | None:
+    if study_material_id is None:
+        return None
+
+    material = db.get(StudyMaterial, study_material_id)
+    if not material or material.user_id != user_id:
+        return None
+
+    return material.title
+
+
 def create_flashcard(db: Session, user_id: int, payload: FlashcardCreate) -> Flashcard:
-    flashcard = Flashcard(user_id=user_id, **payload.model_dump())
+    flashcard_data = payload.model_dump()
+    material_title = _material_set_title(db, flashcard_data.get("study_material_id"), user_id)
+
+    if material_title:
+        flashcard_data["source_type"] = "study_material"
+        flashcard_data["set_title"] = material_title
+    else:
+        flashcard_data["source_type"] = flashcard_data.get("source_type") or "manual"
+        flashcard_data["set_title"] = flashcard_data.get("set_title") or "General flashcards"
+
+    flashcard = Flashcard(user_id=user_id, **flashcard_data)
     db.add(flashcard)
     db.commit()
     db.refresh(flashcard)
@@ -178,6 +199,8 @@ def generate_flashcards_for_user(
             answer=card["answer"],
             status="new",
             difficulty=card["difficulty"],
+            source_type=context["source_type"],
+            set_title=context["topic"],
         )
         for card in generated_cards
     ]

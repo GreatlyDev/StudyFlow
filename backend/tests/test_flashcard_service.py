@@ -75,6 +75,8 @@ class FlashcardServiceTest(unittest.TestCase):
         self.assertEqual(created.user_id, self.user.id)
         self.assertEqual(created.study_material_id, self.material.id)
         self.assertEqual(created.status, "new")
+        self.assertEqual(created.source_type, "study_material")
+        self.assertEqual(created.set_title, "Cellular respiration notes")
 
         saved_cards = list_flashcards_for_user(self.db, self.user.id)
         self.assertEqual(len(saved_cards), 1)
@@ -105,6 +107,8 @@ class FlashcardServiceTest(unittest.TestCase):
 
         self.assertEqual(len(created_cards), 3)
         self.assertTrue(all(card.user_id == self.user.id for card in created_cards))
+        self.assertTrue(all(card.source_type == "starter_topic" for card in created_cards))
+        self.assertTrue(all(card.set_title == "Computer Science: Data Structures" for card in created_cards))
         self.assertTrue(any("Data Structures" in card.question for card in created_cards))
 
         saved_cards = list_flashcards_for_user(self.db, self.user.id)
@@ -139,6 +143,8 @@ class FlashcardServiceTest(unittest.TestCase):
 
         self.assertEqual(len(created_cards), 2)
         self.assertEqual(created_cards[0].study_material_id, self.material.id)
+        self.assertEqual(created_cards[0].source_type, "study_material")
+        self.assertEqual(created_cards[0].set_title, "Cellular respiration notes")
         self.assertEqual(created_cards[0].question, "What does cellular respiration produce?")
 
     def test_generate_flashcards_tops_up_when_provider_returns_too_few_cards(self):

@@ -20,6 +20,8 @@ class Flashcard(Base):
     answer: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(30), default="new", nullable=False)
     difficulty: Mapped[int] = mapped_column(Integer, default=2, nullable=False)
+    source_type: Mapped[str] = mapped_column(String(30), default="manual", nullable=False)
+    set_title: Mapped[str] = mapped_column(String(120), default="General flashcards", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
