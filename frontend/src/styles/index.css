@@ -549,6 +549,13 @@ label {
   align-items: end;
 }
 
+.study-set-picker-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(260px, 0.5fr);
+  gap: 24px;
+  align-items: end;
+}
+
 .study-mode-page {
   min-height: calc(100vh - 160px);
   justify-content: center;
@@ -883,6 +890,16 @@ label {
   box-shadow: 0 0 0 3px rgba(94, 98, 241, 0.2);
 }
 
+.timeline-item.ai-suggested .timeline-time {
+  color: #168a61;
+  font-weight: 700;
+}
+
+.timeline-item.ai-suggested .timeline-dot {
+  background-color: #48d597;
+  box-shadow: 0 0 0 3px rgba(72, 213, 151, 0.18);
+}
+
 .timeline-line {
   position: absolute;
   top: 14px;
@@ -900,6 +917,19 @@ label {
 
 .timeline-content {
   flex: 1;
+}
+
+.timeline-empty-state {
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.08), transparent 32%),
+    var(--surface-offwhite);
+}
+
+.timeline-empty-state h3 {
+  margin: 8px 0;
 }
 
 .card-row {
@@ -995,6 +1025,35 @@ label {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-dark);
+}
+
+.card-ai-suggestion {
+  background:
+    radial-gradient(circle at top right, rgba(94, 98, 241, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(72, 213, 151, 0.08), var(--surface-white) 55%);
+  border-color: rgba(72, 213, 151, 0.3);
+}
+
+.card-ai-suggestion .badge-ai {
+  background: rgba(94, 98, 241, 0.12);
+  color: var(--brand-accent);
+}
+
+.timeline-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  color: var(--text-gray);
+  font-size: 0.9rem;
+}
+
+.timeline-action-button {
+  min-height: auto;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .time-divider {
@@ -1130,6 +1189,7 @@ label {
   color: var(--text-dark);
   font-size: 1rem;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .mini-summary-label {
@@ -1243,7 +1303,8 @@ label {
 
 .dashboard-ai-preview {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border-light);
@@ -1252,7 +1313,23 @@ label {
 }
 
 .dashboard-ai-preview strong {
+  min-width: 0;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-context-card {
+  margin-top: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background: var(--surface-offwhite);
+}
+
+.dashboard-context-card strong {
+  display: block;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
 }
 
 .ai-recommendation-panel {
@@ -1541,6 +1618,7 @@ label {
   .auth-layout,
   .ai-generator-card,
   .flashcard-generator-form,
+  .study-set-picker-card,
   .auth-preview-grid,
   .study-material-stats,
   .ai-placeholder-notes {

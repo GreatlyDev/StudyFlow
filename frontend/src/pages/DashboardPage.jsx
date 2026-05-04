@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { aiApi, dashboardApi, reminderApi } from "../api/client";
+import { aiApi, dashboardApi, reminderApi, scheduleApi } from "../api/client";
 import CalendarWidget from "../components/CalendarWidget";
 import StudyPlanTimeline from "../components/StudyPlanTimeline";
 import { useAuth } from "../context/AuthContext";
@@ -65,83 +65,128 @@ function sortReminders(items) {
   });
 }
 
+function formatDateForApi(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTimeForApi(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function addMinutes(date, minutes) {
+  const nextDate = new Date(date);
+  nextDate.setMinutes(nextDate.getMinutes() + minutes);
+  return nextDate;
+}
+
+function roundToNextSlot(date, stepMinutes = 30) {
+  const roundedDate = new Date(date);
+  roundedDate.setSeconds(0, 0);
+
+  const minutes = roundedDate.getMinutes();
+  const remainder = minutes % stepMinutes;
+  const minutesToAdd = remainder === 0 ? stepMinutes : stepMinutes - remainder;
+  roundedDate.setMinutes(minutes + minutesToAdd);
+
+  return roundedDate;
+}
+
+function buildAiSuggestionSlot(index, now = new Date()) {
+  const firstSlot = roundToNextSlot(addMinutes(now, 60));
+  const suggestedStart = addMinutes(firstSlot, index * 60);
+
+  if (suggestedStart.getHours() >= 22) {
+    const tomorrowMorning = new Date(now);
+    tomorrowMorning.setDate(tomorrowMorning.getDate() + 1);
+    tomorrowMorning.setHours(9 + index, 0, 0, 0);
+    return {
+      start: tomorrowMorning,
+      end: addMinutes(tomorrowMorning, 45),
+    };
+  }
+
+  return {
+    start: suggestedStart,
+    end: addMinutes(suggestedStart, 45),
+  };
+}
+
+function getRecommendationKey(recommendation, index) {
+  return `${recommendation.category}-${recommendation.title}-${index}`;
+}
+
 function getAiModeLabel(status) {
   return status === "openai" ? "OpenAI connected" : "Foundation mode";
 }
 
-function buildTimelineItems(summary) {
+function isFutureReminder(reminder, now = new Date()) {
+  return buildDate(reminder.reminder_date, reminder.reminder_time || "23:59").getTime() >= now.getTime();
+}
+
+function buildTimelineItems(summary, recommendations = [], options = {}) {
+  const {
+    addedRecommendationKeys = new Set(),
+    onAddRecommendation,
+    savingRecommendationKey,
+  } = options;
   const schedules = sortSchedules(summary?.upcoming_schedule_items || []);
   const assignments = sortAssignments(summary?.upcoming_deadlines || []);
 
-  const firstSchedule = schedules[0];
-  const secondSchedule = schedules[1];
-  const focusAssignment =
-    assignments.find((assignment) => assignment.status !== "completed") || assignments[0];
-  const laterItem = secondSchedule || assignments[1];
+  const scheduleItems = schedules.map((schedule) => ({
+    id: `schedule-${schedule.id}`,
+    sortDate: buildDate(schedule.schedule_date, schedule.start_time),
+    timeLabel: formatTimeLabel(schedule.start_time),
+    subtitle: `${schedule.location || "Study session"} - Scheduled`,
+    title: schedule.title,
+    footer: `${formatTimeLabel(schedule.start_time)} - ${formatTimeLabel(schedule.end_time)}`,
+    variant: "standard",
+  }));
 
-  const items = [
-    firstSchedule
-      ? {
-          id: `schedule-${firstSchedule.id}`,
-          timeLabel: formatTimeLabel(firstSchedule.start_time),
-          subtitle: `${firstSchedule.location || "Study session"} - Scheduled`,
-          title: firstSchedule.title,
-          variant: "standard",
-        }
-      : {
-          id: "default-review",
-          timeLabel: "10 AM",
-          subtitle: "CS 101 - Lecture Review",
-          title: "Data Structures & Algorithms",
-          variant: "standard",
-        },
-    {
-      id: "lunch-break",
-      timeLabel: "11 AM",
-      title: "Lunch break",
-      variant: "blocked",
-    },
-    focusAssignment
-      ? {
-          id: `assignment-${focusAssignment.id}`,
-          timeLabel: formatTimeLabel(focusAssignment.due_time || "13:00"),
-          subtitle: `${focusAssignment.course_name || "Upcoming task"} - Exam Prep`,
-          title: focusAssignment.title,
-          footer: formatDueSummary(focusAssignment),
-          badge: "AI Recommended",
-          variant: "primary",
-        }
-      : {
-          id: "default-focus",
-          timeLabel: "1 PM",
-          subtitle: "Biology 204 - Exam Prep",
-          title: "Cellular Respiration Quiz",
-          footer: "Focus session: 2 hrs",
-          badge: "AI Recommended",
-          variant: "primary",
-        },
-    laterItem
-      ? {
-          id: laterItem.schedule_date
-            ? `later-schedule-${laterItem.id}`
-            : `later-assignment-${laterItem.id}`,
-          timeLabel: laterItem.schedule_date
-            ? formatTimeLabel(laterItem.start_time)
-            : formatTimeLabel(laterItem.due_time || "15:00"),
-          subtitle: laterItem.schedule_date
-            ? `${laterItem.location || "Study session"} - Planned`
-            : `${laterItem.course_name || "Course task"} - Due Soon`,
-          title: laterItem.title,
-          variant: "standard",
-        }
-      : {
-          id: "default-reading",
-          timeLabel: "3 PM",
-          subtitle: "Literature 102 - Reading",
-          title: "Read Chapters 4-6",
-          variant: "standard",
-        },
-  ];
+  const assignmentItems = assignments.map((assignment, index) => ({
+    id: `assignment-${assignment.id}`,
+    sortDate: buildDate(assignment.due_date, assignment.due_time || "23:59"),
+    timeLabel: assignment.due_time ? formatTimeLabel(assignment.due_time) : "Due today",
+    subtitle: `${assignment.course_name || "Course task"} - Upcoming deadline`,
+    title: assignment.title,
+    footer: formatDueSummary(assignment),
+    badge: index === 0 ? "AI Recommended" : undefined,
+    variant: index === 0 ? "primary" : "standard",
+  }));
+
+  const aiSuggestionItems = recommendations
+    .slice(0, 3)
+    .map((recommendation, index) => {
+      const recommendationKey = getRecommendationKey(recommendation, index);
+      const suggestedSlot = buildAiSuggestionSlot(index);
+
+      return {
+        id: `ai-${recommendationKey}`,
+        recommendationKey,
+        sortDate: suggestedSlot.start,
+        timeLabel: formatTimeLabel(formatTimeForApi(suggestedSlot.start)),
+        subtitle: `${recommendation.category} - AI suggestion`,
+        title: recommendation.title,
+        footer: recommendation.action || recommendation.reason,
+        badge: "AI Suggestion",
+        variant: "ai",
+        actionLabel:
+          savingRecommendationKey === recommendationKey ? "Adding..." : "Add to Schedule",
+        actionDisabled: savingRecommendationKey === recommendationKey,
+        onAction: onAddRecommendation
+          ? () => onAddRecommendation(recommendation, index, suggestedSlot, recommendationKey)
+          : undefined,
+      };
+    })
+    .filter((item) => !addedRecommendationKeys.has(item.recommendationKey));
+
+  const items = [...scheduleItems, ...assignmentItems, ...aiSuggestionItems]
+    .sort((first, second) => first.sortDate.getTime() - second.sortDate.getTime())
+    .slice(0, 6);
 
   return items.map((item, index) => ({
     ...item,
@@ -152,37 +197,76 @@ function buildTimelineItems(summary) {
 export default function DashboardPage() {
   const { token, user } = useAuth();
   const [summary, setSummary] = useState(null);
-  const [aiPlaceholder, setAiPlaceholder] = useState(null);
   const [aiRecommendations, setAiRecommendations] = useState(null);
   const [reminders, setReminders] = useState([]);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [savingRecommendationKey, setSavingRecommendationKey] = useState("");
+  const [addedRecommendationKeys, setAddedRecommendationKeys] = useState(() => new Set());
+
+  async function loadDashboardData() {
+    try {
+      const [summaryData, recommendationResult, reminderItems] = await Promise.all([
+        dashboardApi.getSummary(token),
+        aiApi.getRecommendations(token).catch(() => null),
+        reminderApi.list(token),
+      ]);
+      setSummary(summaryData);
+      setAiRecommendations(recommendationResult);
+      setReminders(reminderItems);
+      setError("");
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
 
   useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        const [summaryData, aiData, recommendationResult, reminderItems] = await Promise.all([
-          dashboardApi.getSummary(token),
-          aiApi.getPlaceholder(),
-          aiApi.getRecommendations(token).catch(() => null),
-          reminderApi.list(token),
-        ]);
-        setSummary(summaryData);
-        setAiPlaceholder(aiData);
-        setAiRecommendations(recommendationResult);
-        setReminders(reminderItems);
-      } catch (requestError) {
-        setError(requestError.message);
-      }
-    }
-
     loadDashboardData();
   }, [token]);
 
+  async function handleAddRecommendation(recommendation, index, suggestedSlot, recommendationKey) {
+    setError("");
+    setSuccessMessage("");
+    setSavingRecommendationKey(recommendationKey);
+
+    try {
+      await scheduleApi.create(token, {
+        title: recommendation.title,
+        description: recommendation.reason,
+        schedule_date: formatDateForApi(suggestedSlot.start),
+        start_time: formatTimeForApi(suggestedSlot.start),
+        end_time: formatTimeForApi(suggestedSlot.end),
+        location: "AI study plan",
+        notes: recommendation.action || "Added from StudyFlow AI recommendation.",
+      });
+
+      setAddedRecommendationKeys((currentKeys) => {
+        const nextKeys = new Set(currentKeys);
+        nextKeys.add(recommendationKey);
+        return nextKeys;
+      });
+      setSuccessMessage("AI recommendation added to your schedule.");
+      await loadDashboardData();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setSavingRecommendationKey("");
+    }
+  }
+
   const upcomingAssignments = sortAssignments(summary?.upcoming_deadlines || []);
   const upcomingSchedules = sortSchedules(summary?.upcoming_schedule_items || []);
-  const activeReminders = sortReminders(reminders.filter((reminder) => !reminder.is_done));
+  const now = new Date();
+  const activeReminders = sortReminders(
+    reminders.filter((reminder) => !reminder.is_done && isFutureReminder(reminder, now)),
+  );
   const nextReminder = activeReminders[0];
-  const timelineItems = buildTimelineItems(summary);
+  const timelineItems = buildTimelineItems(summary, aiRecommendations?.recommendations || [], {
+    addedRecommendationKeys,
+    onAddRecommendation: handleAddRecommendation,
+    savingRecommendationKey,
+  });
+  const activeFocus = timelineItems.find((item) => item.variant === "primary") || timelineItems[0];
 
   const eventDates = [
     ...upcomingAssignments.map((assignment) => assignment.due_date),
@@ -200,11 +284,13 @@ export default function DashboardPage() {
         <div className="dashboard-hero-card">
           <div>
             <p className="eyebrow">StudyFlow Pulse</p>
-            <h2>{timelineItems[2]?.title || "Build today's study plan"}</h2>
+            <h2>{activeFocus?.title || "Build today's study plan"}</h2>
             <p>
               {nextReminder
                 ? `Next reminder: ${nextReminder.title} at ${formatTimeLabel(nextReminder.reminder_time)}`
-                : "Connect courses, assignments, schedules, and reminders to keep the day organized."}
+                : activeFocus
+                  ? `Next study item: ${activeFocus.subtitle}`
+                  : "Add a course, assignment, schedule, or reminder to start filling this dashboard with live data."}
             </p>
           </div>
 
@@ -245,6 +331,7 @@ export default function DashboardPage() {
         </div>
 
         {error ? <p className="error-text">{error}</p> : null}
+        {successMessage ? <p className="success-text">{successMessage}</p> : null}
 
         <StudyPlanTimeline items={timelineItems} />
       </section>
@@ -259,11 +346,10 @@ export default function DashboardPage() {
 
           <div className="insight-card" id="ai-foundation">
             <p className="eyebrow">AI Foundation</p>
-            <h3>{aiPlaceholder?.title || "AI Study Recommendations"}</h3>
+            <h3>{aiRecommendations?.title || "AI Study Recommendations"}</h3>
             <p className="helper-text">
               {aiRecommendations?.summary ||
-                aiPlaceholder?.message ||
-                "AI recommendations are not fully implemented yet, but the project structure is ready."}
+                "Add study data to generate focused recommendations for your next study session."}
             </p>
 
             <div className="insight-chip-row">
@@ -282,15 +368,13 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            <div className="mini-summary-grid">
-              <div className="mini-summary-card">
-                <span className="mini-summary-label">Student</span>
-                <strong>{user?.full_name}</strong>
-              </div>
-              <div className="mini-summary-card">
-                <span className="mini-summary-label">Next step</span>
-                <strong>{aiPlaceholder?.next_step || "Connect future AI study guidance"}</strong>
-              </div>
+            <div className="dashboard-context-card">
+              <span className="mini-summary-label">Signed in as</span>
+              <strong>{user?.full_name}</strong>
+              <p className="helper-text">
+                Recommendations update from your saved courses, deadlines, schedules,
+                reminders, study materials, and flashcards.
+              </p>
             </div>
           </div>
 
@@ -339,7 +423,7 @@ export default function DashboardPage() {
               </div>
               <div className="mini-summary-card">
                 <span className="mini-summary-label">Active Focus</span>
-                <strong>{timelineItems[2]?.title || "No task selected"}</strong>
+                <strong>{activeFocus?.title || "No task selected"}</strong>
               </div>
               <div className="mini-summary-card">
                 <span className="mini-summary-label">Active Reminders</span>

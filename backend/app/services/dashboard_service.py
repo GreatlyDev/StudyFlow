@@ -1,3 +1,5 @@
+from datetime import datetime, time
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,16 @@ from app.schemas.dashboard import (
 )
 
 
-def build_dashboard_summary(db: Session, user_id: int) -> DashboardSummaryResponse:
+def _combine_date_time(day, clock_value, fallback: time) -> datetime:
+    return datetime.combine(day, clock_value or fallback)
+
+
+def build_dashboard_summary(
+    db: Session,
+    user_id: int,
+    now: datetime | None = None,
+) -> DashboardSummaryResponse:
+    now = now or datetime.now()
     courses = list(db.scalars(select(Course).where(Course.user_id == user_id)).all())
     assignments = list(
         db.scalars(
@@ -29,6 +40,18 @@ def build_dashboard_summary(db: Session, user_id: int) -> DashboardSummaryRespon
     )
 
     course_name_map = {course.id: course.name for course in courses}
+    upcoming_assignments = [
+        assignment
+        for assignment in assignments
+        if assignment.status != "completed"
+        and _combine_date_time(assignment.due_date, assignment.due_time, time(23, 59)) >= now
+    ]
+    upcoming_schedules = [
+        schedule
+        for schedule in schedules
+        if _combine_date_time(schedule.schedule_date, schedule.end_time, schedule.start_time) >= now
+    ]
+
     upcoming_deadlines = [
         DashboardAssignmentItem(
             id=assignment.id,
@@ -39,8 +62,7 @@ def build_dashboard_summary(db: Session, user_id: int) -> DashboardSummaryRespon
             status=assignment.status,
             priority=assignment.priority,
         )
-        for assignment in assignments
-        if assignment.status != "completed"
+        for assignment in upcoming_assignments
     ][:3]
 
     upcoming_schedule_items = [
@@ -52,7 +74,7 @@ def build_dashboard_summary(db: Session, user_id: int) -> DashboardSummaryRespon
             end_time=schedule.end_time,
             location=schedule.location,
         )
-        for schedule in schedules[:3]
+        for schedule in upcoming_schedules[:3]
     ]
 
     return DashboardSummaryResponse(

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import ALLOWED_ORIGINS
 from app.db.base import Base
 from app.db.session import engine
+from app.db.sqlite_migrations import ensure_sqlite_flashcard_columns
 from app.models import assignment, course, flashcard, password_reset, reminder, schedule, study_material, user  # noqa: F401
 from app.routes.assignments import router as assignments_router
 from app.routes.ai import router as ai_router
@@ -37,6 +38,7 @@ app.add_middleware(
 def on_startup() -> None:
     # For the first prototype, auto-create tables on startup to keep setup simple.
     Base.metadata.create_all(bind=engine)
+    ensure_sqlite_flashcard_columns(engine)
 
 
 app.include_router(health_router, prefix="/api")

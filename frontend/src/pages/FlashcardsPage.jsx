@@ -27,6 +27,10 @@ function getDifficultyLabel(value) {
   return labels[value] || "Medium";
 }
 
+function getFlashcardSetTitle(flashcard) {
+  return flashcard.set_title || "General flashcards";
+}
+
 export default function FlashcardsPage() {
   const { token } = useAuth();
   const [materials, setMaterials] = useState([]);
@@ -34,6 +38,7 @@ export default function FlashcardsPage() {
   const [formData, setFormData] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedSetTitle, setSelectedSetTitle] = useState("");
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
   const [isStudyModeOpen, setIsStudyModeOpen] = useState(false);
   const [generatorData, setGeneratorData] = useState({
@@ -47,14 +52,33 @@ export default function FlashcardsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const materialTitleMap = Object.fromEntries(
-    materials.map((material) => [material.id, material.title]),
-  );
-  const activeCard = flashcards[activeIndex] || null;
-  const studyProgress =
-    flashcards.length === 0 ? 0 : Math.round(((activeIndex + 1) / flashcards.length) * 100);
+  const studySets = Array.from(
+    flashcards
+      .reduce((sets, flashcard) => {
+        const title = getFlashcardSetTitle(flashcard);
+        const existingSet = sets.get(title) || {
+          title,
+          sourceType: flashcard.source_type || "manual",
+          count: 0,
+        };
 
-  async function loadPageData() {
+        sets.set(title, {
+          ...existingSet,
+          count: existingSet.count + 1,
+        });
+
+        return sets;
+      }, new Map())
+      .values(),
+  );
+  const activeDeck = selectedSetTitle
+    ? flashcards.filter((flashcard) => getFlashcardSetTitle(flashcard) === selectedSetTitle)
+    : flashcards;
+  const activeCard = activeDeck[activeIndex] || null;
+  const studyProgress =
+    activeDeck.length === 0 ? 0 : Math.round(((activeIndex + 1) / activeDeck.length) * 100);
+
+  async function loadPageData(preferredSetTitle = "") {
     try {
       const [materialItems, flashcardItems] = await Promise.all([
         studyMaterialApi.list(token),
@@ -62,9 +86,19 @@ export default function FlashcardsPage() {
       ]);
       setMaterials(materialItems);
       setFlashcards(flashcardItems);
-      setActiveIndex((currentIndex) =>
-        flashcardItems.length === 0 ? 0 : Math.min(currentIndex, flashcardItems.length - 1),
-      );
+      setSelectedSetTitle((currentTitle) => {
+        const availableTitles = flashcardItems.map(getFlashcardSetTitle);
+        if (availableTitles.length === 0) {
+          return "";
+        }
+
+        if (preferredSetTitle && availableTitles.includes(preferredSetTitle)) {
+          return preferredSetTitle;
+        }
+
+        return availableTitles.includes(currentTitle) ? currentTitle : availableTitles[0];
+      });
+      setActiveIndex(0);
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -138,9 +172,11 @@ export default function FlashcardsPage() {
 
     try {
       const generatedCards = await flashcardApi.generate(token, payload);
+      const generatedSetTitle = generatedCards[0]?.set_title || "";
       setSuccessMessage(`Generated ${generatedCards.length} flashcard(s).`);
+      setActiveIndex(0);
       setIsAnswerVisible(false);
-      await loadPageData();
+      await loadPageData(generatedSetTitle);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -179,15 +215,15 @@ export default function FlashcardsPage() {
   };
 
   const moveReview = (direction) => {
-    if (flashcards.length === 0) {
+    if (activeDeck.length === 0) {
       return;
     }
     setActiveIndex((currentIndex) => {
       const nextIndex = currentIndex + direction;
       if (nextIndex < 0) {
-        return flashcards.length - 1;
+        return activeDeck.length - 1;
       }
-      if (nextIndex >= flashcards.length) {
+      if (nextIndex >= activeDeck.length) {
         return 0;
       }
       return nextIndex;
@@ -196,7 +232,7 @@ export default function FlashcardsPage() {
   };
 
   const openStudyMode = () => {
-    if (flashcards.length === 0) {
+    if (activeDeck.length === 0) {
       return;
     }
     setActiveIndex(0);
@@ -247,7 +283,7 @@ export default function FlashcardsPage() {
             <div>
               <span className="mini-summary-label">Progress</span>
               <strong>
-                Card {activeIndex + 1} of {flashcards.length}
+                Card {activeIndex + 1} of {activeDeck.length}
               </strong>
             </div>
             <div className="study-progress-track">
@@ -267,7 +303,7 @@ export default function FlashcardsPage() {
                 </span>
                 <strong>{isAnswerVisible ? activeCard.answer : activeCard.question}</strong>
                 <span className="helper-text">
-                  {materialTitleMap[activeCard.study_material_id] || "General flashcard"}
+                  {getFlashcardSetTitle(activeCard)}
                 </span>
               </button>
 
@@ -404,6 +440,38 @@ export default function FlashcardsPage() {
         </form>
       </article>
 
+      <article className="card study-set-picker-card">
+        <div>
+          <p className="eyebrow">Study Sets</p>
+          <h3>Choose what to review</h3>
+          <p className="helper-text">
+            Generated flashcards stay grouped by starter topic or saved study material.
+          </p>
+        </div>
+
+        {studySets.length === 0 ? (
+          <p className="helper-text">Generate or create flashcards to start a study set.</p>
+        ) : (
+          <label>
+            Active Study Set
+            <select
+              value={selectedSetTitle}
+              onChange={(event) => {
+                setSelectedSetTitle(event.target.value);
+                setActiveIndex(0);
+                setIsAnswerVisible(false);
+              }}
+            >
+              {studySets.map((set) => (
+                <option key={set.title} value={set.title}>
+                  {set.title} ({set.count} cards)
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </article>
+
       <div className="schedule-grid">
         <article className="card">
           <h3>{editingId ? "Edit Flashcard" : "Create Flashcard"}</h3>
@@ -490,14 +558,14 @@ export default function FlashcardsPage() {
           <div className="section-header section-header-tight">
             <h3>Review Session</h3>
             <span className="tag">
-              {flashcards.length === 0 ? "0 cards" : `${activeIndex + 1} of ${flashcards.length}`}
+              {activeDeck.length === 0 ? "0 cards" : `${activeIndex + 1} of ${activeDeck.length}`}
             </span>
           </div>
 
           {activeCard ? (
             <div className="flashcard-review">
               <p className="mini-summary-label">
-                {materialTitleMap[activeCard.study_material_id] || "General flashcard"}
+                {getFlashcardSetTitle(activeCard)}
               </p>
               <h3>{activeCard.question}</h3>
 
@@ -558,7 +626,7 @@ export default function FlashcardsPage() {
               <div key={flashcard.id} className="list-item study-material-item">
                 <div>
                   <strong>{flashcard.question}</strong>
-                  <p>{materialTitleMap[flashcard.study_material_id] || "General flashcard"}</p>
+                  <p>{getFlashcardSetTitle(flashcard)}</p>
                   <p className="material-preview">{flashcard.answer}</p>
                   <div className="insight-chip-row">
                     <span className="insight-chip">{flashcard.status}</span>

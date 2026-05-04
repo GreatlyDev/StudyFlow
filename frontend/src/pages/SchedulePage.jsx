@@ -13,6 +13,21 @@ const emptyForm = {
   notes: "",
 };
 
+function formatTimeOption(value) {
+  const [hourText, minuteText] = value.split(":");
+  const hour = Number(hourText);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minuteText} ${suffix}`;
+}
+
+const timeOptions = Array.from({ length: 72 }, (_, index) => {
+  const totalMinutes = 6 * 60 + index * 15;
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
+  return `${hours}:${minutes}`;
+});
+
 export default function SchedulePage() {
   const { token } = useAuth();
   const [schedules, setSchedules] = useState([]);
@@ -164,24 +179,36 @@ export default function SchedulePage() {
 
             <label>
               Start Time
-              <input
-                type="time"
+              <select
                 name="start_time"
                 value={formData.start_time}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Choose start time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {formatTimeOption(time)}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label>
               End Time
-              <input
-                type="time"
+              <select
                 name="end_time"
                 value={formData.end_time}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Choose end time</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {formatTimeOption(time)}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="span-2">

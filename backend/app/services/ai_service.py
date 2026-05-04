@@ -1,4 +1,5 @@
 from typing import Any, Callable
+from datetime import datetime, time
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -99,44 +100,59 @@ def _build_openai_response(
     }
 
 
+def _combine_date_time(day, clock_value, fallback: time) -> datetime:
+    return datetime.combine(day, clock_value or fallback)
+
+
 def build_study_recommendations(
     db: Session,
     user_id: int,
     ai_provider: AiProvider | None = None,
+    now: datetime | None = None,
 ) -> dict:
     """
     Rule-based recommendation foundation.
     This gives the UI real study guidance now and leaves a clean seam for OpenAI later.
     """
 
+    now = now or datetime.now()
     recommendations: list[dict[str, str]] = []
 
-    assignments = list(
-        db.scalars(
-            select(Assignment)
-            .where(Assignment.user_id == user_id, Assignment.status != "completed")
-            .order_by(Assignment.priority, Assignment.due_date, Assignment.due_time)
-            .limit(3)
-        ).all()
-    )
+    assignments = [
+        assignment
+        for assignment in list(
+            db.scalars(
+                select(Assignment)
+                .where(Assignment.user_id == user_id, Assignment.status != "completed")
+                .order_by(Assignment.priority, Assignment.due_date, Assignment.due_time)
+            ).all()
+        )
+        if _combine_date_time(assignment.due_date, assignment.due_time, time(23, 59)) >= now
+    ][:3]
 
-    schedules = list(
-        db.scalars(
-            select(Schedule)
-            .where(Schedule.user_id == user_id)
-            .order_by(Schedule.schedule_date, Schedule.start_time)
-            .limit(2)
-        ).all()
-    )
+    schedules = [
+        schedule
+        for schedule in list(
+            db.scalars(
+                select(Schedule)
+                .where(Schedule.user_id == user_id)
+                .order_by(Schedule.schedule_date, Schedule.start_time)
+            ).all()
+        )
+        if _combine_date_time(schedule.schedule_date, schedule.end_time, schedule.start_time) >= now
+    ][:2]
 
-    reminders = list(
-        db.scalars(
-            select(Reminder)
-            .where(Reminder.user_id == user_id, Reminder.is_done.is_(False))
-            .order_by(Reminder.reminder_date, Reminder.reminder_time)
-            .limit(2)
-        ).all()
-    )
+    reminders = [
+        reminder
+        for reminder in list(
+            db.scalars(
+                select(Reminder)
+                .where(Reminder.user_id == user_id, Reminder.is_done.is_(False))
+                .order_by(Reminder.reminder_date, Reminder.reminder_time)
+            ).all()
+        )
+        if _combine_date_time(reminder.reminder_date, reminder.reminder_time, time(23, 59)) >= now
+    ][:2]
 
     study_materials = list(
         db.scalars(
