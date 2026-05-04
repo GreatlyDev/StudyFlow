@@ -12,6 +12,7 @@ from app.schemas.flashcard import FlashcardCreate, FlashcardUpdate
 from app.services.flashcard_service import (
     create_flashcard,
     delete_flashcard,
+    generate_flashcards_for_user,
     get_flashcard_for_user,
     list_flashcards_for_user,
     update_flashcard,
@@ -92,6 +93,98 @@ class FlashcardServiceTest(unittest.TestCase):
 
         delete_flashcard(self.db, created)
         self.assertEqual(list_flashcards_for_user(self.db, self.user.id), [])
+
+    def test_generate_flashcards_from_starter_topic_with_fallback(self):
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Computer Science: Data Structures",
+            count=3,
+        )
+
+        self.assertEqual(len(created_cards), 3)
+        self.assertTrue(all(card.user_id == self.user.id for card in created_cards))
+        self.assertTrue(any("Data Structures" in card.question for card in created_cards))
+
+        saved_cards = list_flashcards_for_user(self.db, self.user.id)
+        self.assertEqual(len(saved_cards), 3)
+
+    def test_generate_flashcards_from_study_material_with_provider(self):
+        def fake_provider(context):
+            self.assertEqual(context["source_type"], "study_material")
+            self.assertIn("Cellular respiration", context["content"])
+            self.assertEqual(context["count"], 2)
+            return [
+                {
+                    "question": "What does cellular respiration produce?",
+                    "answer": "Cellular respiration produces ATP from glucose.",
+                    "difficulty": 2,
+                },
+                {
+                    "question": "What molecule is broken down during respiration?",
+                    "answer": "Glucose is broken down during cellular respiration.",
+                    "difficulty": 1,
+                },
+            ]
+
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="study_material",
+            study_material_id=self.material.id,
+            count=2,
+            ai_provider=fake_provider,
+        )
+
+        self.assertEqual(len(created_cards), 2)
+        self.assertEqual(created_cards[0].study_material_id, self.material.id)
+        self.assertEqual(created_cards[0].question, "What does cellular respiration produce?")
+
+    def test_generate_flashcards_tops_up_when_provider_returns_too_few_cards(self):
+        def short_provider(context):
+            self.assertEqual(context["count"], 5)
+            return [
+                {
+                    "question": "What does cellular respiration produce?",
+                    "answer": "It produces ATP.",
+                    "difficulty": 2,
+                },
+                {
+                    "question": "Where does glycolysis happen?",
+                    "answer": "Glycolysis happens in the cytoplasm.",
+                    "difficulty": 2,
+                },
+                {
+                    "question": "What starts cellular respiration?",
+                    "answer": "Glucose starts the process.",
+                    "difficulty": 1,
+                },
+            ]
+
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Biology: Cellular Respiration",
+            count=5,
+            ai_provider=short_provider,
+        )
+
+        self.assertEqual(len(created_cards), 5)
+        self.assertEqual(created_cards[0].question, "What does cellular respiration produce?")
+        self.assertIn("Biology: Cellular Respiration", created_cards[-1].question)
+
+    def test_generate_flashcards_supports_eight_card_sessions(self):
+        created_cards = generate_flashcards_for_user(
+            self.db,
+            self.user.id,
+            source_type="starter_topic",
+            topic="Math: Algebra Review",
+            count=8,
+        )
+
+        self.assertEqual(len(created_cards), 8)
 
 
 if __name__ == "__main__":

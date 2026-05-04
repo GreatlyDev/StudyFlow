@@ -34,11 +34,54 @@ class OpenAiRecommendationProvider:
             return None
 
 
+class OpenAiFlashcardProvider:
+    def __init__(self, api_key: str, model: str) -> None:
+        from openai import OpenAI
+
+        self.client = OpenAI(api_key=api_key)
+        self.model = model
+
+    def __call__(self, context: dict[str, Any]) -> list[dict[str, Any]] | None:
+        requested_count = context.get("count", 5)
+        prompt = (
+            "You are generating flashcards for StudyFlow. "
+            f"Create exactly {requested_count} clear active-recall flashcards from the provided context. "
+            "Return only valid JSON with this shape: "
+            '{"flashcards":[{"question":"string","answer":"string","difficulty":1|2|3}]}. '
+            "Keep answers concise, accurate, and useful for a student presentation demo.\n\n"
+            f"Context:\n{json.dumps(context, default=str)}"
+        )
+
+        response = self.client.responses.create(
+            model=self.model,
+            input=prompt,
+            store=False,
+        )
+
+        try:
+            parsed = json.loads(response.output_text)
+        except (json.JSONDecodeError, TypeError):
+            return None
+
+        flashcards = parsed.get("flashcards")
+        return flashcards if isinstance(flashcards, list) else None
+
+
 def build_openai_recommendation_provider() -> OpenAiRecommendationProvider | None:
     if not OPENAI_API_KEY:
         return None
 
     try:
         return OpenAiRecommendationProvider(api_key=OPENAI_API_KEY, model=OPENAI_MODEL)
+    except Exception:
+        return None
+
+
+def build_openai_flashcard_provider() -> OpenAiFlashcardProvider | None:
+    if not OPENAI_API_KEY:
+        return None
+
+    try:
+        return OpenAiFlashcardProvider(api_key=OPENAI_API_KEY, model=OPENAI_MODEL)
     except Exception:
         return None
