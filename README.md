@@ -1,35 +1,70 @@
 # StudyFlow
 
-StudyFlow is a team-built software engineering project focused on helping students manage coursework, plan study time, and prepare for exams with a future-ready AI foundation.
+**AI Study Optimization Platform for students who want one organized place for classes, deadlines, study materials, flashcards, quizzes, reminders, and study planning.**
 
-This first scaffold covers:
+<p>
+  <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-Backend-009688?style=for-the-badge&logo=fastapi&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/React-Vite-646CFF?style=for-the-badge&logo=react&logoColor=white">
+  <img alt="SQLite" src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white">
+  <img alt="JWT" src="https://img.shields.io/badge/JWT-Authentication-111827?style=for-the-badge&logo=jsonwebtokens&logoColor=white">
+  <img alt="OpenAI" src="https://img.shields.io/badge/OpenAI-AI_Assistant-412991?style=for-the-badge&logo=openai&logoColor=white">
+</p>
 
-- user authentication
-- course and assignment management
-- schedule management foundation
-- a dashboard summary with deadline tracking
-- AI placeholder endpoints for future integration
-- frontend and backend project structure for team collaboration
+StudyFlow is a team-built COSC 458 software engineering project. The prototype helps students create an account, organize coursework, schedule study time, save study materials, generate flashcards, practice with quizzes, and receive simple AI-supported study recommendations.
+
+## Prototype Status
+
+This repository is now in a presentation-ready prototype state. It is not a production deployment, but it demonstrates the major user flow for the class presentation:
+
+1. Create an account or log in.
+2. Add courses and assignments.
+3. Create study schedule items.
+4. Add reminders and receive browser alerts while the app is open.
+5. Save study materials.
+6. Generate flashcards from starter topics or saved materials.
+7. Study flashcard sets and take practice quizzes.
+8. View dashboard recommendations and convert AI suggestions into schedule items.
+
+## Feature Snapshot
+
+| Area | What Works Now |
+| --- | --- |
+| Account Management | Register, login, JWT-protected routes, current-user session, forgot/reset password demo flow |
+| Courses | Create, view, edit, and delete courses |
+| Assignments | Create, view, edit, and delete assignments linked to courses |
+| Study Schedule | Create, view, edit, and delete study blocks with improved time dropdowns |
+| Dashboard | Shows real user data, upcoming reminders, study blocks, counts, and AI recommendation cards |
+| Reminders | Create reminders, link them to assignments/schedules, and receive in-app browser alerts |
+| Study Materials | Save notes/materials that can support flashcard generation |
+| Flashcards | Manual flashcards, AI/starter-topic generated cards, grouped study sets, study mode |
+| Practice Quizzes | Quiz yourself from one selected flashcard set, track score, and review missed cards |
+| AI Foundation | OpenAI-backed recommendations/flashcard support with graceful prototype structure |
 
 ## Team-Friendly Structure
 
 ```text
 StudyFlow/
-|-- backend/                  # FastAPI backend
-|-- docs/                     # Team workflow and project notes
+|-- backend/                  # FastAPI backend, SQLAlchemy models, routes, services
+|-- docs/                     # Team workflow, project status, and presentation guide
 |-- frontend/                 # React + Vite frontend
-|-- .gitignore
+|-- .gitignore                # Keeps venv, node_modules, local DB, and secrets out of Git
 `-- README.md
 ```
 
 ## Tech Stack
 
-- Backend: FastAPI, SQLAlchemy, Pydantic
-- Database: SQLite
-- Frontend: React with Vite
-- Auth: JWT
+| Layer | Tools |
+| --- | --- |
+| Frontend | React, Vite, React Router, CSS |
+| Backend | FastAPI, SQLAlchemy, Pydantic |
+| Database | SQLite for the prototype |
+| Auth | JWT tokens and password hashing |
+| AI | OpenAI API through backend environment variables |
+| Collaboration | GitHub branches, pull requests, Trello Kanban board |
 
-## Getting Started
+## Running Locally
+
+These commands assume Windows PowerShell or Git Bash from the cloned repository.
 
 ### 1. Create and activate the virtual environment
 
@@ -40,7 +75,7 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If Windows blocks activation scripts, you can still use the virtual environment Python directly:
+If Windows blocks activation scripts, use the virtual environment Python directly:
 
 ```powershell
 .\.venv\Scripts\python.exe --version
@@ -52,57 +87,121 @@ If Windows blocks activation scripts, you can still use the virtual environment 
 .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-### 3. Install frontend dependencies
+### 3. Create the backend environment file
+
+Copy `backend\.env.example` into a new local file named `backend\.env`.
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+```
+
+Then edit `backend\.env`.
+
+```env
+SECRET_KEY=change-this-before-production
+FRONTEND_URL=http://127.0.0.1:5173
+DATABASE_URL=sqlite:///backend/studyflow.db
+OPENAI_API_KEY=your-local-openai-key-here
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+Important: do not commit `backend\.env`. It is intentionally ignored by Git.
+
+### 4. Install frontend dependencies
 
 ```powershell
 cd frontend
 npm.cmd install
 ```
 
-### 4. Run the backend
+### 5. Run the backend
+
+Open one terminal:
 
 ```powershell
-cd backend
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+cd C:\Users\great\Documents\Playground\StudyFlow\backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-### 5. Run the frontend
+### 6. Run the frontend
+
+Open a second terminal:
 
 ```powershell
-cd frontend
-npm.cmd run dev
+cd C:\Users\great\Documents\Playground\StudyFlow\frontend
+npm.cmd run dev -- --host 127.0.0.1 --port 5173
 ```
 
-## Current Features
+Then open:
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET /api/ai/placeholder`
-- `POST /api/assignments`
-- `GET /api/assignments`
-- `PUT /api/assignments/{id}`
-- `DELETE /api/assignments/{id}`
-- `POST /api/courses`
-- `GET /api/courses`
-- `PUT /api/courses/{id}`
-- `DELETE /api/courses/{id}`
-- `GET /api/dashboard/summary`
-- `POST /api/schedules`
-- `GET /api/schedules`
-- `PUT /api/schedules/{id}`
-- `DELETE /api/schedules/{id}`
+```text
+http://127.0.0.1:5173
+```
 
-## Suggested Branch Strategy
+## OpenAI Key on Another Laptop
 
-Do not work directly on `main`. Suggested feature branches:
+Yes, to demo the OpenAI-backed parts on another laptop, that laptop also needs its own local `backend\.env` file with `OPENAI_API_KEY` filled in. The key should never be pushed to GitHub.
 
-- `feature/auth-backend`
-- `feature/auth-frontend`
-- `feature/schedule-foundation`
-- `feature/courses-module`
-- `feature/assignments-module`
-- `feature/dashboard-improvements`
-- `feature/ai-placeholders`
+If no key is provided, the regular app still runs, but AI-backed recommendations/generation may fall back or fail depending on the route being used. For the presentation laptop, set the key before demo time.
+
+## Demo Flow Recommendation
+
+For the final presentation, keep the demo focused and smooth:
+
+1. Show the landing/login page.
+2. Log in with a prepared demo user.
+3. Show the dashboard and explain that it summarizes real schedule/reminder/study data.
+4. Create or show a course and assignment.
+5. Create a schedule item and a reminder.
+6. Generate COSC 458 flashcards from the starter topic.
+7. Open Practice Quizzes and quiz yourself from that specific flashcard set.
+8. Return to the dashboard and show how the study plan/recommendations connect the app together.
+
+## Collaboration Workflow
+
+We use Trello to plan work and GitHub to protect the code.
+
+- Product Backlog: larger feature areas.
+- Sprint Backlog: selected user stories for the current sprint.
+- To Do: tasks ready to begin.
+- In Progress: tasks actively being coded.
+- Done: only work that exists in GitHub and has been merged.
+
+Branch rule:
+
+```text
+main stays stable.
+Each task gets its own feature branch.
+Branches are merged through pull requests.
+```
+
+Example branch names:
+
+```text
+feature/flashcard-study-mode
+feature/reminder-alerts
+feature/practice-quiz-mode
+feature/dashboard-ai-recommendations
+```
 
 More workflow notes are in [docs/team-workflow.md](docs/team-workflow.md).
+
+## Presentation Support
+
+Use [docs/presentation-guide.md](docs/presentation-guide.md) to divide speaking parts across the team and keep the demo within the time limit.
+
+## Current Limitations
+
+This is a class prototype, so a few items are intentionally scoped for future work:
+
+- No hosted production deployment yet.
+- SQLite is used for local development instead of a production database.
+- Reminder alerts work while the web app is open.
+- AI features are useful for demo purposes, but not a full personalized learning engine yet.
+- No Docker setup is required for the current presentation workflow.
+
+## Team
+
+- Product Owner: Great-Anthony Umukoro
+- Scrum Master: Nia Webster
+- Development/Test Team: Darruis Jackson, Schidny Balisage, Christian Jamison, Kalonji Stephens
