@@ -14,6 +14,7 @@ const emptyForm = {
 const statusOptions = ["new", "reviewing", "mastered"];
 const starterTopics = [
   "Biology: Cellular Respiration",
+  "Computer Science 458: Introduction to Software Engineering",
   "Computer Science: Data Structures",
   "Math: Algebra Review",
 ];
